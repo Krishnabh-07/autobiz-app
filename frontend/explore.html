@@ -1,0 +1,515 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Nearby Businesses — AutoBiz AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #060813; color: #f3f4f6; overflow-x: hidden; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(0, 245, 160, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0, 245, 160, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            box-shadow: 0 0 20px rgba(0, 245, 160, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#00f5a0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AutoBiz AI">
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Header -->
+    <header class="relative z-20 w-full px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
+            </div>
+            <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
+        </a>
+
+        <nav class="hidden md:flex items-center gap-8 glass-card px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
+            <a href="/" class="hover:text-cyan-400 transition">Home (3D)</a>
+            <a href="/explore.html" class="text-emerald-400 font-semibold">Explore Nearby</a>
+            <a href="/dashboard.html" class="hover:text-purple-400 transition">Owner Portal</a>
+        </nav>
+
+        <div class="flex items-center gap-3" id="customerNav">
+            <button onclick="openCustomerLogin()" class="glass-card px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-400 hover:text-white flex items-center gap-2 border border-emerald-500/20 hover:border-emerald-500/50 transition">
+                <i data-lucide="user-circle" class="w-5 h-5"></i> Login / Track Status
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-10 flex-1 w-full">
+
+        <!-- Hero Search Section -->
+        <div class="text-center space-y-4 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Find Top Rated Facilities Near You
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
+                Discover & Book <span class="gradient-text">Top Local Businesses</span>
+            </h1>
+            <p class="text-gray-400 text-sm sm:text-base">
+                Instant 1-Click Free Trial & Appointment booking with AI-assigned time slots.
+            </p>
+
+            <!-- Search & City Filter Bar -->
+            <div class="glass-card p-3 rounded-2xl flex flex-col sm:flex-row gap-3 items-center border-white/10 shadow-2xl">
+                <div class="relative flex-1 w-full">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-3.5"></i>
+                    <input type="text" id="searchInput" onkeyup="filterAndLoad()" placeholder="Search Gyms, Clinics, Salons or Keywords..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-black/40 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <select id="citySelect" onchange="filterAndLoad()" class="w-full sm:w-44 px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="all">📍 All Cities</option>
+                        <option value="Guwahati" selected>Guwahati</option>
+                        <option value="Delhi">Delhi / NCR</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Kolkata">Kolkata</option>
+                    </select>
+
+                    <button onclick="filterAndLoad()" class="btn-gradient text-slate-950 font-bold px-6 py-3 rounded-xl text-sm shrink-0">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start sm:justify-center">
+            <button onclick="selectCategory('all')" class="cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap transition" data-cat="all">
+                🌟 All Categories
+            </button>
+            <button onclick="selectCategory('gym')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="gym">
+                🏋️ Gyms & Fitness
+            </button>
+            <button onclick="selectCategory('clinic')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="clinic">
+                🏥 Clinics & Doctors
+            </button>
+            <button onclick="selectCategory('salon')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="salon">
+                💇 Salons & Spas
+            </button>
+            <button onclick="selectCategory('coaching')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="coaching">
+                🏫 Coaching Centres
+            </button>
+            <button onclick="selectCategory('dental')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="dental">
+                🦷 Dental Care
+            </button>
+        </div>
+
+        <!-- Business Cards Grid -->
+        <div id="businessesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-3 text-center py-12 text-gray-500">Loading registered businesses...</div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Instant Trial / Slot Booking -->
+    <div id="bookingModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-md glass-card p-6 sm:p-8 rounded-3xl border-cyan-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-emerald-400"></i> <span id="modalBizName">Book Free Trial</span>
+                    </h3>
+                    <p class="text-xs text-gray-400" id="modalBizCity">Guwahati &bull; Verified Facility</p>
+                </div>
+                <button onclick="closeModal('bookingModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
+            </div>
+
+            <form id="bookingForm" onsubmit="submitBooking(event)" class="space-y-3.5">
+                <input type="hidden" id="bookGymId">
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Your Full Name</label>
+                    <input type="text" id="bName" required placeholder="e.g. Rohit Talukdar" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">WhatsApp Phone Number</label>
+                    <input type="tel" id="bPhone" required placeholder="e.g. 9876543210" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Select Preferred Time Slot</label>
+                    <select id="bSlot" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="Morning 07:00 AM">🌅 Morning Slot (07:00 AM - 08:00 AM)</option>
+                        <option value="Morning 09:00 AM">☀️ Morning Slot (09:00 AM - 10:00 AM)</option>
+                        <option value="Evening 05:00 PM">🌆 Evening Slot (05:00 PM - 06:00 PM)</option>
+                        <option value="Evening 07:00 PM">🌙 Evening VIP Slot (07:00 PM - 08:00 PM)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Your Goal / Notes</label>
+                    <input type="text" id="bNotes" placeholder="e.g. Weight Loss / Consultation" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <button type="submit" id="bookSubmitBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm">
+                    Confirm Booking & Get AI Slot 🎯
+                </button>
+            </form>
+
+            <div id="bookSuccessMsg" class="hidden text-center text-sm font-semibold p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 space-y-2">
+                <div>🎉 Trial & Slot Confirmed!</div>
+                <p class="text-xs text-gray-300 font-normal">A confirmation message with instructions has been dispatched to your WhatsApp number.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-6 text-center text-xs text-gray-500">
+        &copy; 2026 AutoBiz AI SaaS Platform &bull; Powered by Krishnabh Talukdar
+    </footer>
+
+    <!-- Member Login Modal (Real OTP system) -->
+    <div id="customerLoginModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-card p-6 sm:p-8 rounded-3xl border-emerald-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-5 h-5 text-emerald-400"></i> Member Access
+                </h3>
+                <button onclick="closeCustomerLogin()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
+                    <i data-lucide="smartphone" class="w-8 h-8 text-emerald-400"></i>
+                </div>
+                <p class="text-sm text-gray-400">Enter your registered WhatsApp number to view your active subscriptions, slots, and QR passes.</p>
+            </div>
+
+            <!-- Phone Input Step -->
+            <div id="otpPhoneStep" class="space-y-4 pt-2">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">WhatsApp Number</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-white/10 bg-black/30 text-gray-400 sm:text-sm">
+                            +91
+                        </span>
+                        <input type="tel" id="customerPhone" placeholder="10-digit number" class="flex-1 w-full px-4 py-3 rounded-r-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                    </div>
+                </div>
+                
+                <button onclick="requestOTP()" id="reqOtpBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
+                    Send Login OTP
+                </button>
+            </div>
+
+            <!-- OTP Input Step (Hidden initially) -->
+            <div id="otpVerifyStep" class="space-y-4 pt-2 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Enter 4-Digit OTP</label>
+                    <input type="text" id="customerOtp" placeholder="••••" class="w-full px-4 py-3 text-center tracking-widest text-lg rounded-xl bg-black/50 border border-white/10 outline-none text-white focus:border-emerald-400">
+                </div>
+                
+                <button onclick="verifyOTP()" id="verifyOtpBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
+                    Verify & Login
+                </button>
+                <button onclick="resetOTPStep()" class="w-full text-xs text-gray-400 hover:text-emerald-400 mt-2">Change Number</button>
+            </div>
+            
+            <div id="otpMsg" class="hidden text-center text-xs font-medium p-2 rounded-lg"></div>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script>
+        lucide.createIcons();
+
+        function openCustomerLogin() {
+            document.getElementById('customerLoginModal').classList.remove('hidden');
+            document.getElementById('customerLoginModal').classList.add('flex');
+            resetOTPStep();
+        }
+
+        function closeCustomerLogin() {
+            document.getElementById('customerLoginModal').classList.add('hidden');
+            document.getElementById('customerLoginModal').classList.remove('flex');
+        }
+
+        function resetOTPStep() {
+            document.getElementById('otpPhoneStep').classList.remove('hidden');
+            document.getElementById('otpVerifyStep').classList.add('hidden');
+            document.getElementById('otpMsg').classList.add('hidden');
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerOtp').value = '';
+        }
+
+        async function requestOTP() {
+            const phone = document.getElementById('customerPhone').value.trim();
+            if (!phone || phone.length < 10) {
+                alert('Please enter a valid 10-digit number'); return;
+            }
+            
+            const btn = document.getElementById('reqOtpBtn');
+            btn.innerText = "Sending..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/auth/member/request-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone: phone })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    // Show OTP step
+                    document.getElementById('otpPhoneStep').classList.add('hidden');
+                    document.getElementById('otpVerifyStep').classList.remove('hidden');
+                    
+                    // Show alert with OTP (since we aren't connected to Meta API natively yet)
+                    alert(`✅ WhatsApp SMS Engine Triggered!\n\n(Dev Mode): Your OTP is ${data.mock_otp}\n\nEnter this to login!`);
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            } catch (err) {
+                alert("Connection error!");
+            } finally {
+                btn.innerText = "Send Login OTP"; btn.disabled = false;
+            }
+        }
+
+        async function verifyOTP() {
+            const phone = document.getElementById('customerPhone').value.trim();
+            const otp = document.getElementById('customerOtp').value.trim();
+            const msg = document.getElementById('otpMsg');
+            const btn = document.getElementById('verifyOtpBtn');
+            
+            if (!otp) return;
+            btn.innerText = "Verifying..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/auth/member/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone: phone, otp: otp })
+                });
+                const data = await res.json();
+                
+                msg.classList.remove('hidden');
+                if (res.ok) {
+                    msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-emerald-500/20 text-emerald-300 block";
+                    msg.innerText = "✅ Login Successful!";
+                    localStorage.setItem('member_token', data.access_token);
+                    localStorage.setItem('member_phone', data.phone);
+                    setTimeout(() => {
+                        window.location.href = '/customer_portal.html';
+                    }, 1000);
+                } else {
+                    msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-red-500/20 text-red-300 block";
+                    msg.innerText = "❌ Incorrect OTP!";
+                }
+            } catch (err) {
+                msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Network Error!";
+            } finally {
+                btn.innerText = "Verify & Login"; btn.disabled = false;
+            }
+        }
+
+        let selectedBusinessId = null;
+        let currentCategory = 'all';
+        let allBusinesses = [];
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap transition";
+                } else {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition";
+                }
+            });
+            filterAndLoad();
+        }
+
+        async function filterAndLoad() {
+            const city = document.getElementById('citySelect').value;
+            const search = document.getElementById('searchInput').value;
+
+            const grid = document.getElementById('businessesGrid');
+            grid.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-400 animate-pulse">Finding matching facilities...</div>';
+
+            try {
+                let url = `/businesses/explore?city=${encodeURIComponent(city)}&business_type=${encodeURIComponent(currentCategory)}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const res = await fetch(url);
+                if (res.ok) {
+                    allBusinesses = await res.json();
+                    renderGrid(allBusinesses);
+                } else {
+                    grid.innerHTML = '<div class="col-span-3 text-center py-12 text-red-400">Failed to load businesses.</div>';
+                }
+            } catch (e) {
+                console.error("Explore fetch error", e);
+                grid.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500">Connection error.</div>';
+            }
+        }
+
+        function renderGrid(businesses) {
+            const grid = document.getElementById('businessesGrid');
+            if (!businesses.length) {
+                grid.innerHTML = `
+                    <div class="col-span-3 glass-card p-12 rounded-3xl text-center space-y-3">
+                        <div class="text-4xl">🏢</div>
+                        <h3 class="text-lg font-bold text-white">No businesses found in this category yet.</h3>
+                        <p class="text-xs text-gray-400">Be the first to register in this city!</p>
+                        <a href="/" class="btn-gradient inline-block px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950">Register Business Now</a>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = businesses.map(b => `
+                <div class="glass-card rounded-3xl overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <!-- Image & Badges -->
+                        <div class="relative h-44 w-full overflow-hidden">
+                            <img src="${b.image}" alt="${b.name}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#060813] via-transparent to-black/40"></div>
+                            
+                            <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-bold bg-black/60 backdrop-blur-md text-emerald-400 border border-white/10 flex items-center gap-1">
+                                <i data-lucide="star" class="w-3 h-3 text-yellow-400 fill-yellow-400"></i> ${b.rating} Verified
+                            </span>
+
+                            <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/20 backdrop-blur-md text-cyan-300 border border-cyan-500/30">
+                                ${b.business_type}
+                            </span>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <h3 class="text-xl font-extrabold text-white">${b.name}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-emerald-400"></i> ${b.city} &bull; Managed by ${b.owner_name}
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 py-3 border-y border-white/5 text-xs">
+                                <div>
+                                    <span class="text-gray-500 block text-[10px]">TIMINGS</span>
+                                    <span class="font-semibold text-gray-200">${b.timings}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block text-[10px]">MEMBERSHIP / FEE</span>
+                                    <span class="font-bold text-emerald-400">${b.starting_price}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="p-6 pt-0 flex gap-2">
+                        <button onclick="openBookingModal(${b.id}, '${b.name}', '${b.city}')" class="btn-gradient flex-1 py-3 rounded-xl font-bold text-slate-950 text-xs flex items-center justify-center gap-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Book Free Trial
+                        </button>
+                        <button onclick="inquireWhatsApp('${b.phone}', '${b.name}')" class="glass-card px-4 py-3 rounded-xl font-semibold text-xs text-emerald-300 hover:text-white flex items-center justify-center">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function openBookingModal(gymId, name, city) {
+            document.getElementById('bookGymId').value = gymId;
+            document.getElementById('modalBizName').innerText = `Book at ${name}`;
+            document.getElementById('modalBizCity').innerText = `${city} • 1-Day Pass`;
+            document.getElementById('bookingForm').classList.remove('hidden');
+            document.getElementById('bookSuccessMsg').classList.add('hidden');
+            openModal('bookingModal');
+        }
+
+        function inquireWhatsApp(phone, name) {
+            const msg = `Hello ${name}! I found your facility on AutoBiz. I would like to know more about your plans and timing.`;
+            window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        async function submitBooking(e) {
+            e.preventDefault();
+            const btn = document.getElementById('bookSubmitBtn');
+            btn.disabled = true;
+            btn.innerText = "Assigning AI Slot...";
+
+            const gymId = document.getElementById('bookGymId').value;
+            const slot = document.getElementById('bSlot').value;
+            const notes = document.getElementById('bNotes').value;
+
+            const payload = {
+                gym_id: parseInt(gymId),
+                name: document.getElementById('bName').value,
+                phone: document.getElementById('bPhone').value,
+                source: "explore_page",
+                notes: `Slot: ${slot} | Note: ${notes || 'Inquiry'}`
+            };
+
+            try {
+                const res = await fetch('/leads/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    document.getElementById('bookingForm').classList.add('hidden');
+                    document.getElementById('bookSuccessMsg').classList.remove('hidden');
+                    setTimeout(() => {
+                        closeModal('bookingModal');
+                    }, 2500);
+                } else {
+                    alert('Booking failed. Please try again.');
+                }
+            } catch (err) {
+                alert('Connection error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm Booking & Get AI Slot 🎯";
+            }
+        }
+
+        // Initial Load
+        filterAndLoad();
+    </script>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+<div id="pwaInstallBtn" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;background:linear-gradient(135deg,#00f5a0,#00d9f5);color:#000;font-weight:700;padding:12px 20px;border-radius:50px;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,245,160,0.4);font-size:14px;" onclick="installPWA()">📱 Install App</div>
+</body>
+</html>

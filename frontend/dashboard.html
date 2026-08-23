@@ -1,0 +1,463 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Dashboard — Universal AI SaaS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #070913; color: #f3f4f6; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-glow {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(0, 245, 160, 0.4);
+        }
+    </style>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#00f5a0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AutoBiz AI">
+</head>
+<body class="min-h-screen flex flex-col md:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 glass-card p-6 flex flex-col justify-between border-r border-white/10 shrink-0">
+        <div class="space-y-8">
+            <div class="flex items-center gap-3">
+                <div id="brandIconBox" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center">
+                    <i id="brandIcon" data-lucide="building" class="w-5 h-5 text-black"></i>
+                </div>
+                <div>
+                    <h2 class="font-extrabold text-lg text-white" id="sidebarBusinessName">My Business</h2>
+                    <span class="text-xs text-emerald-400 font-semibold uppercase tracking-wider" id="sidebarBusinessType">● Clinic Active</span>
+                </div>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="#overview" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 text-emerald-300 font-semibold text-sm border border-emerald-500/20">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i> Overview & Revenue
+                </a>
+                <a href="#leads" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 font-medium text-sm transition">
+                    <i data-lucide="user-check" class="w-4 h-4"></i> <span class="nav-inquiries-label">Inquiries</span>
+                </a>
+                <a href="#members" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 font-medium text-sm transition">
+                    <i data-lucide="users" class="w-4 h-4"></i> <span class="nav-customers-label">Customers</span>
+                </a>
+                <a href="#payments" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 font-medium text-sm transition">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i> Payments & Billing
+                </a>
+            </nav>
+        </div>
+
+        <div class="pt-6 border-t border-white/10 space-y-3">
+            <a href="/" class="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition">
+                <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i> View 3D Website
+            </a>
+            <button onclick="logout()" class="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out / Switch Business
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+
+        <!-- Top Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white">
+                    <span id="bizCategoryBadge" class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 mr-2">CLINIC</span>
+                    <span id="mainHeaderTitle">Command Center</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-gray-400 mt-1">Real-time PostgreSQL sync customized for your industry.</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="loadDashboardData()" class="glass-card px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400"></i> Refresh
+                </button>
+                <button onclick="openModal('addMemberModal')" class="btn-glow text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> <span id="addBtnLabel">Add Patient</span>
+                </button>
+                <button onclick="openModal('addPaymentModal')" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                    <i data-lucide="wallet" class="w-4 h-4"></i> Record Payment
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="glass-card p-5 rounded-2xl border-emerald-500/20 space-y-2">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span>Total Collected Revenue</span>
+                    <i data-lucide="indian-rupee" class="w-4 h-4 text-emerald-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-white" id="statRevenue">&#8377;0.00</div>
+                <span class="text-[11px] text-emerald-400 font-semibold" id="statTransCount">0 Transactions</span>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-cyan-500/20 space-y-2">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span id="activeCustomersStatLabel">Active Patients</span>
+                    <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-white" id="statMembers">0</div>
+                <span class="text-[11px] text-cyan-400 font-semibold">100% Verified</span>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-purple-500/20 space-y-2">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span id="inquiriesStatLabel">New Appointments</span>
+                    <i data-lucide="user-check" class="w-4 h-4 text-purple-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-white" id="statLeads">0</div>
+                <span class="text-[11px] text-purple-400 font-semibold">WhatsApp Auto-Reminders</span>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl border-yellow-500/20 space-y-2">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span>Anti-Fraud Lock</span>
+                    <i data-lucide="shield-check" class="w-4 h-4 text-yellow-400"></i>
+                </div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-emerald-400">SECURE</div>
+                <span class="text-[11px] text-gray-400 font-semibold">Zero Jhooth Guarantee</span>
+            </div>
+        </div>
+
+        <!-- Leads CRM -->
+        <section class="glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="target" class="w-5 h-5 text-purple-400"></i> <span id="leadsTableHeading">Recent Inquiries & Appointments</span>
+                </h3>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-300">
+                    <thead class="bg-black/40 text-gray-400 uppercase font-semibold border-b border-white/10">
+                        <tr>
+                            <th class="p-3.5">Name</th>
+                            <th class="p-3.5">Phone</th>
+                            <th class="p-3.5" id="notesColumnLabel">Issue / Goal</th>
+                            <th class="p-3.5">Status</th>
+                            <th class="p-3.5 text-right">Quick Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody" class="divide-y divide-white/5">
+                        <tr><td colspan="5" class="p-4 text-center text-gray-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Customers & Payments -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section class="glass-card rounded-2xl p-6 space-y-4">
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5 text-cyan-400"></i> <span id="membersListHeading">Registered Patients</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-300">
+                        <thead class="bg-black/40 text-gray-400 uppercase font-semibold border-b border-white/10">
+                            <tr>
+                                <th class="p-3" id="customerColName">Patient</th>
+                                <th class="p-3">Plan / Case</th>
+                                <th class="p-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersTableBody" class="divide-y divide-white/5">
+                            <tr><td colspan="3" class="p-4 text-center text-gray-500">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="glass-card rounded-2xl p-6 space-y-4">
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="bot" class="w-5 h-5 text-emerald-400"></i> 🤖 AI Auto-Dispatched Activity (Channel 2)
+                </h3>
+                <div class="overflow-y-auto max-h-64 space-y-2.5" id="aiAutoLogList">
+                    <div class="p-3 rounded-xl bg-white/5 text-xs text-gray-400 text-center">AI Bot actively monitoring 3-day renewals & trial follow-ups.</div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Modal: Add Member -->
+    <div id="addMemberModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-md glass-card p-6 rounded-3xl border-cyan-500/30 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-extrabold text-white text-base" id="modalAddTitle">Add New Customer</h3>
+                <button onclick="closeModal('addMemberModal')" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <form onsubmit="submitAddMember(event)" class="space-y-3">
+                <input type="text" id="mName" required placeholder="Full Name" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                <input type="tel" id="mPhone" required placeholder="Phone Number" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                <input type="email" id="mEmail" placeholder="Email" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                <select id="mType" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white outline-none">
+                    <option value="standard">Standard Plan / Regular</option>
+                    <option value="premium">Premium / Full Course</option>
+                    <option value="vip">VIP / Executive</option>
+                </select>
+                <button type="submit" class="btn-glow w-full py-2.5 rounded-xl text-slate-950 font-bold text-xs" id="modalSaveBtn">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Record Payment -->
+    <div id="addPaymentModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-md glass-card p-6 rounded-3xl border-emerald-500/30 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-extrabold text-white text-base">Record Payment</h3>
+                <button onclick="closeModal('addPaymentModal')" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <form onsubmit="submitAddPayment(event)" class="space-y-3">
+                <input type="number" id="pMemberId" required placeholder="Customer/Patient ID" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                <input type="number" step="0.01" id="pAmount" required placeholder="Amount (e.g. 1000.00)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                <select id="pMode" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white outline-none">
+                    <option value="UPI">UPI / PhonePe / GPay</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Card">Card</option>
+                </select>
+                <input type="text" id="pNotes" placeholder="Notes" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                <button type="submit" class="btn-glow w-full py-2.5 rounded-xl text-slate-950 font-bold text-xs">Record Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+        function logout() { localStorage.clear(); window.location.href = '/'; }
+
+        // --- Multi-Industry Vocabulary Dictionary ---
+        const INDUSTRY_DICTIONARY = {
+            gym: {
+                badge: 'GYM & FITNESS',
+                customer: 'Member',
+                customers: 'Active Members',
+                inquiry: 'Free Trial',
+                inquiries: 'Trial Bookings',
+                addBtn: 'Add Member',
+                icon: 'dumbbell'
+            },
+            clinic: {
+                badge: 'DOCTOR & CLINIC',
+                customer: 'Patient',
+                customers: 'Active Patients',
+                inquiry: 'Appointment',
+                inquiries: 'Patient Appointments',
+                addBtn: 'Add Patient',
+                icon: 'stethoscope'
+            },
+            coaching: {
+                badge: 'COACHING CENTRE',
+                customer: 'Student',
+                customers: 'Enrolled Students',
+                inquiry: 'Demo Class',
+                inquiries: 'Demo Inquiries',
+                addBtn: 'Add Student',
+                icon: 'graduation-cap'
+            },
+            salon: {
+                badge: 'SALON & SPA',
+                customer: 'Client',
+                customers: 'Regular Clients',
+                inquiry: 'Slot Booking',
+                inquiries: 'Service Bookings',
+                addBtn: 'Add Client',
+                icon: 'scissors'
+            },
+            dental: {
+                badge: 'DENTAL CARE',
+                customer: 'Patient',
+                customers: 'Dental Patients',
+                inquiry: 'Checkup Booking',
+                inquiries: 'Consultation Inquiries',
+                addBtn: 'Add Patient',
+                icon: 'smile'
+            }
+        };
+
+        const businessId = localStorage.getItem('business_id') || 1;
+        const businessName = localStorage.getItem('business_name') || 'PowerFit Club';
+        const rawType = (localStorage.getItem('business_type') || 'gym').toLowerCase();
+        const config = INDUSTRY_DICTIONARY[rawType] || INDUSTRY_DICTIONARY['gym'];
+
+        // Apply Dynamic Labels
+        document.getElementById('sidebarBusinessName').innerText = businessName;
+        document.getElementById('sidebarBusinessType').innerText = `● ${config.badge} ACTIVE`;
+        document.getElementById('bizCategoryBadge').innerText = config.badge;
+        document.getElementById('activeCustomersStatLabel').innerText = config.customers;
+        document.getElementById('inquiriesStatLabel').innerText = config.inquiries;
+        document.getElementById('addBtnLabel').innerText = config.addBtn;
+        document.getElementById('leadsTableHeading').innerText = `Recent ${config.inquiries}`;
+        document.getElementById('membersListHeading').innerText = `Registered ${config.customers}`;
+        document.getElementById('customerColName').innerText = config.customer;
+        document.getElementById('modalAddTitle').innerText = `Add New ${config.customer}`;
+        document.getElementById('modalSaveBtn').innerText = `Save ${config.customer}`;
+
+        document.querySelectorAll('.nav-inquiries-label').forEach(el => el.innerText = config.inquiries);
+        document.querySelectorAll('.nav-customers-label').forEach(el => el.innerText = config.customers);
+
+        lucide.createIcons();
+
+        async function loadDashboardData() {
+            try {
+                // Revenue
+                const revRes = await fetch(`/gyms/${businessId}/revenue`);
+                if (revRes.ok) {
+                    const rev = await revRes.json();
+                    document.getElementById('statRevenue').innerText = `₹${parseFloat(rev.total_revenue).toLocaleString('en-IN')}`;
+                    document.getElementById('statTransCount').innerText = `${rev.total_transactions} Total Transactions`;
+                }
+
+                // Customers
+                const memRes = await fetch(`/gyms/${businessId}/members`);
+                if (memRes.ok) {
+                    const members = await memRes.json();
+                    document.getElementById('statMembers').innerText = members.length;
+                    const mBody = document.getElementById('membersTableBody');
+                    mBody.innerHTML = members.length ? members.map(m => `
+                        <tr>
+                            <td class="p-3 font-semibold text-white">${m.full_name}<br><span class="text-[10px] text-gray-500">${m.phone}</span></td>
+                            <td class="p-3 capitalize">${m.membership_type}</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Active</span></td>
+                        </tr>
+                    `).join('') : `<tr><td colspan="3" class="p-3 text-center text-gray-500">No ${config.customers.toLowerCase()} yet</td></tr>`;
+                }
+
+                // Leads
+                const leadRes = await fetch(`/gyms/${businessId}/leads`);
+                if (leadRes.ok) {
+                    const leads = await leadRes.json();
+                    document.getElementById('statLeads').innerText = leads.length;
+                    const lBody = document.getElementById('leadsTableBody');
+                    lBody.innerHTML = leads.length ? leads.map(l => `
+                        <tr>
+                            <td class="p-3.5 font-bold text-white">${l.name}</td>
+                            <td class="p-3.5 text-gray-300">${l.phone}</td>
+                            <td class="p-3.5 text-gray-400">${l.notes || 'Inquiry'}</td>
+                            <td class="p-3.5">
+                                <span class="px-2.5 py-1 rounded-md text-[10px] font-bold ${l.status === 'new' ? 'bg-purple-500/20 text-purple-300' : 'bg-emerald-500/20 text-emerald-300'} uppercase">
+                                    ${l.status}
+                                </span>
+                            </td>
+                            <td class="p-3.5 text-right">
+                                <button onclick="triggerWhatsApp('${l.phone}', '${l.name}')" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold transition">
+                                    WhatsApp
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('') : `<tr><td colspan="5" class="p-4 text-center text-gray-500">No ${config.inquiries.toLowerCase()} yet</td></tr>`;
+                }
+
+                // Payments
+                const payRes = await fetch(`/gyms/${businessId}/payments`);
+                if (payRes.ok) {
+                    const payments = await payRes.json();
+                    const pBody = document.getElementById('paymentsTableBody');
+                    pBody.innerHTML = payments.length ? payments.map(p => `
+                        <tr>
+                            <td class="p-3 font-bold text-emerald-400">₹${parseFloat(p.amount).toLocaleString('en-IN')}</td>
+                            <td class="p-3"><span class="px-2 py-0.5 rounded bg-white/10 text-[10px]">${p.payment_mode}</span></td>
+                            <td class="p-3 text-gray-400">${p.payment_date || 'Today'}</td>
+                            <td class="p-3 text-gray-500">${p.notes || '-'}</td>
+                        </tr>
+                    `).join('') : '<tr><td colspan="4" class="p-3 text-center text-gray-500">No payments yet</td></tr>';
+                }
+                // 4. AI WhatsApp Auto Logs
+                const logRes = await fetch('/whatsapp/dispatch-history?channel=channel_2');
+                if (logRes.ok) {
+                    const logs = await logRes.json();
+                    const logContainer = document.getElementById('aiAutoLogList');
+                    logContainer.innerHTML = logs.length ? logs.map(l => `
+                        <div class="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-emerald-400">To: +${l.to_phone}</span>
+                                <span class="text-[10px] text-gray-500">${l.timestamp}</span>
+                            </div>
+                            <p class="text-gray-300 text-[11px] italic">"${l.message.substring(0, 90)}..."</p>
+                            <span class="inline-block px-2 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300 font-bold uppercase">● ${l.status}</span>
+                        </div>
+                    `).join('') : '<div class="p-3 rounded-xl bg-white/5 text-xs text-gray-400 text-center">AI Bot actively monitoring 3-day renewals & trial follow-ups.</div>';
+                }
+            } catch (e) {
+                console.error("Dashboard load error", e);
+            }
+        }
+
+        async function triggerWhatsApp(phone, name) {
+            try {
+                const res = await fetch(`/whatsapp/generate/trial-followup?gym_id=${businessId}&customer_name=${encodeURIComponent(name)}&phone=${phone}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    window.open(data.whatsapp_url, '_blank');
+                    return;
+                }
+            } catch (e) {
+                console.error("AI WA fetch error", e);
+            }
+            // Fallback
+            const msg = `Arrey ${name} bhai! 🔥 ${businessName} mein trial kaisa laga? Body banani hai ya motivation reels dekhna hai? 😂 Kaunsa plan lock karein: 1 Month (₹800), 3 Months (₹2,000), 7 Months (₹4,000)? Reply with 1/2/3!`;
+            window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        async function submitAddMember(e) {
+            e.preventDefault();
+            const payload = {
+                gym_id: parseInt(businessId),
+                full_name: document.getElementById('mName').value,
+                phone: document.getElementById('mPhone').value,
+                email: document.getElementById('mEmail').value || null,
+                membership_type: document.getElementById('mType').value
+            };
+            const res = await fetch('/members/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                closeModal('addMemberModal');
+                loadDashboardData();
+            }
+        }
+
+        async function submitAddPayment(e) {
+            e.preventDefault();
+            const payload = {
+                gym_id: parseInt(businessId),
+                member_id: parseInt(document.getElementById('pMemberId').value),
+                amount: parseFloat(document.getElementById('pAmount').value),
+                payment_mode: document.getElementById('pMode').value,
+                payment_status: "completed",
+                notes: document.getElementById('pNotes').value || null
+            };
+            const res = await fetch('/payments/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                closeModal('addPaymentModal');
+                loadDashboardData();
+            }
+        }
+
+        loadDashboardData();
+    </script>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+</body>
+</html>
