@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoBiz AI — Universal Business & Gym Automation Platform</title>
+    <meta name="description" content="Turn your gym, clinic, salon, or local business into an autopilot machine with AutoBiz AI. Automated Lead CRM, real-time AI slot booking, direct 0% UPI payments, and 24/7 WhatsApp AI followups.">
+    <meta name="keywords" content="gym software, clinic management, salon booking software, business automation, WhatsApp AI CRM, UPI payments, AutoBiz">
+    <link rel="canonical" href="https://autobiz-app.onrender.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://autobiz-app.onrender.com/">
+    <meta property="og:title" content="AutoBiz AI — Universal Business Automation Platform">
+    <meta property="og:description" content="Automated Lead CRM, AI slot booking, zero-commission UPI payments & 24/7 WhatsApp AI automation for local businesses.">
+    <meta property="og:image" content="https://autobiz-app.onrender.com/static/icon-512.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AutoBiz AI — Universal Business Automation">
+    <meta name="twitter:description" content="Automate leads, booking, payments, and customer retention with 24/7 WhatsApp AI.">
+    <meta name="twitter:image" content="https://autobiz-app.onrender.com/static/icon-512.png">
+
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AutoBiz AI",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "1500.00",
+        "priceCurrency": "INR"
+      },
+      "description": "Universal Business Automation SaaS for Gyms, Clinics, Salons & Local Businesses."
+    }
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #060813; color: #f3f4f6; overflow-x: hidden; }
+        #canvas3d { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; cursor: grab; }
+        #canvas3d:active { cursor: grabbing; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-panel-glow:hover {
+            border-color: rgba(0, 245, 160, 0.4);
+            box-shadow: 0 0 30px rgba(0, 245, 160, 0.15);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 245, 160, 0.4);
+        }
+    </style>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#00f5a0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AutoBiz AI">
+</head>
+<body class="relative min-h-screen">
+
+    <!-- Gateway Modal (Who are you?) -->
+    <div id="gatewayModal" class="fixed inset-0 z-50 hidden items-center justify-center pointer-events-auto transition-opacity duration-300 opacity-0">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+        <div class="glass-panel p-8 rounded-3xl w-full max-w-3xl relative z-10 mx-4 border border-white/10 shadow-2xl shadow-emerald-500/10 transform transition-all duration-500 scale-95" id="gatewayContent">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 mx-auto mb-4">
+                    <i data-lucide="sparkles" class="w-8 h-8 text-black"></i>
+                </div>
+                <h2 class="text-4xl font-extrabold mb-3">Welcome to AutoBiz</h2>
+                <p class="text-gray-400 text-lg">Are you looking for services, or looking to grow your business?</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Customer Choice -->
+                <a href="/explore.html" class="glass-panel hover:bg-white/5 transition p-8 rounded-2xl flex flex-col items-center text-center cursor-pointer border border-emerald-500/20 hover:border-emerald-500/50 group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 relative z-10">
+                        <i data-lucide="search" class="w-10 h-10 text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 relative z-10">I'm a Customer</h3>
+                    <p class="text-gray-400 relative z-10">Discover and book nearby gyms, clinics, salons & more.</p>
+                    <div class="mt-8 text-emerald-400 font-semibold flex items-center gap-2 group-hover:gap-4 transition-all relative z-10">
+                        Explore Nearby <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </div>
+                </a>
+
+                <!-- Business Owner Choice -->
+                <div onclick="closeGatewayAndSetOwner()" class="glass-panel hover:bg-white/5 transition p-8 rounded-2xl flex flex-col items-center text-center cursor-pointer border border-cyan-500/20 hover:border-cyan-500/50 group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 relative z-10">
+                        <i data-lucide="store" class="w-10 h-10 text-cyan-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 relative z-10">I'm a Business Owner</h3>
+                    <p class="text-gray-400 relative z-10">Automate your operations with AI & grow your business.</p>
+                    <div class="mt-8 text-cyan-400 font-semibold flex items-center gap-2 group-hover:gap-4 transition-all relative z-10">
+                        Manage Business <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Canvas Background -->
+    <canvas id="canvas3d"></canvas>
+
+    <!-- Navigation -->
+    <header class="relative z-20 w-full px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
+            </div>
+            <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-8 glass-panel px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
+            <a href="/explore.html" class="hover:text-emerald-400 font-semibold text-emerald-300 transition">📍 Explore Nearby</a>
+            <a href="#industries" class="hover:text-cyan-400 transition">Industries</a>
+            <a href="#howitworks" class="hover:text-cyan-400 transition">How It Works</a>
+            <a href="javascript:void(0)" onclick="goToLiveDashboard()" class="hover:text-purple-400 transition">Owner Portal</a>
+            <a href="/docs" target="_blank" class="hover:text-white transition">API Engine</a>
+        </nav>
+
+        <div class="flex items-center gap-3">
+            <button onclick="openModal('loginModal')" class="glass-panel px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-200 hover:text-white hover:bg-white/10 transition flex items-center gap-2">
+                <i data-lucide="lock" class="w-4 h-4 text-emerald-400"></i> Owner Login
+            </button>
+            <button onclick="openModal('registerModal')" class="btn-gradient text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm shadow-md">
+                Register Your Business
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-20 flex flex-col lg:flex-row items-center justify-between gap-12 pointer-events-none">
+        <div class="w-full lg:w-3/5 space-y-6 text-center lg:text-left pointer-events-auto">
+            <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass-panel border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider shadow-inner">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Universal AI Automation for Gyms, Clinics, Salons & 12+ Niches
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
+                Turn Any Business Into An <br>
+                <span class="gradient-text">Autopilot Machine.</span>
+            </h1>
+
+            <p class="text-gray-400 text-lg sm:text-xl max-w-2xl font-normal leading-relaxed">
+                Leads CRM, Members/Patients, Instant Fee Tracking & 24/7 WhatsApp AI Automation &mdash; effortlessly controlled in <span class="text-white font-semibold">1-Click</span> from your phone or desktop.
+            </p>
+
+            <div class="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                <button onclick="openModal('registerModal')" class="btn-gradient text-slate-950 font-extrabold px-8 py-4 rounded-xl text-base flex items-center gap-3 w-full sm:w-auto justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="rocket" class="w-5 h-5"></i> Get Started Free
+                </button>
+                <button onclick="goToLiveDashboard()" class="glass-panel text-gray-200 hover:text-white px-8 py-4 rounded-xl text-base font-semibold transition hover:bg-white/10 w-full sm:w-auto flex items-center justify-center gap-2">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 text-cyan-400"></i> Open Live Dashboard
+                </button>
+            </div>
+
+            <div class="pt-8 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0 border-t border-white/10">
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-white">100%</h3>
+                    <p class="text-xs text-gray-400 font-medium">Tenant Isolated</p>
+                </div>
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold gradient-text">24/7</h3>
+                    <p class="text-xs text-gray-400 font-medium">WhatsApp AI Bot</p>
+                </div>
+                <div>
+                    <h3 class="text-2xl sm:text-3xl font-extrabold text-white">0%</h3>
+                    <p class="text-xs text-gray-400 font-medium">UPI Commission</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-2/5 h-64 lg:h-96 flex items-center justify-center pointer-events-none"></div>
+    </main>
+
+    <!-- Visual 5-Step Engine Architecture Section -->
+    <section id="howitworks" class="relative z-10 max-w-7xl mx-auto px-6 py-12 border-t border-white/10">
+        <div class="text-center space-y-2 mb-10">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Complete Customer & Business Journey</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">How AutoBiz Operates on <span class="gradient-text">100% Autopilot</span></h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-4">
+            <div class="glass-panel p-5 rounded-2xl border border-emerald-500/20 text-center space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto font-black text-sm">1</div>
+                <h4 class="font-bold text-sm text-white">Lead Discovery</h4>
+                <p class="text-[11px] text-gray-400">Nearby customers find facility on explore map.</p>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl border border-cyan-500/20 text-center space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto font-black text-sm">2</div>
+                <h4 class="font-bold text-sm text-white">AI Time Slots</h4>
+                <p class="text-[11px] text-gray-400">Capacity engine assigns real-time workout batches.</p>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl border border-purple-500/20 text-center space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto font-black text-sm">3</div>
+                <h4 class="font-bold text-sm text-white">WhatsApp Alert</h4>
+                <p class="text-[11px] text-gray-400">Instant AI confirmation & map sent to phone.</p>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl border border-yellow-500/20 text-center space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-yellow-500/20 text-yellow-400 flex items-center justify-center mx-auto font-black text-sm">4</div>
+                <h4 class="font-bold text-sm text-white">Direct 0% UPI</h4>
+                <p class="text-[11px] text-gray-400">QR Code scan. 100% money direct to owner bank.</p>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl border border-emerald-500/20 text-center space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto font-black text-sm">5</div>
+                <h4 class="font-bold text-sm text-white">AI Pass & Retention</h4>
+                <p class="text-[11px] text-gray-400">Digital QR Pass + automated 3-day renewal bot.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Multi-Industry Section -->
+    <section id="industries" class="relative z-10 max-w-7xl mx-auto px-6 py-16 border-t border-white/10">
+        <div class="text-center space-y-3 mb-12">
+            <h2 class="text-3xl font-extrabold">Built For <span class="gradient-text">12+ Local Business Categories</span></h2>
+            <p class="text-gray-400 text-sm max-w-xl mx-auto">One powerful platform adapts automatically to your specific industry workflow.</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div onclick="openRegisterWithCategory('gym')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                    <i data-lucide="dumbbell" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Gyms & Fitness</h4>
+                    <p class="text-[11px] text-gray-400">Trial &rarr; Member &rarr; Renewal</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('clinic')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 shrink-0">
+                    <i data-lucide="stethoscope" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Clinics & Doctors</h4>
+                    <p class="text-[11px] text-gray-400">Enquiry &rarr; Appointment</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('salon')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 shrink-0">
+                    <i data-lucide="scissors" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Salons & Spas</h4>
+                    <p class="text-[11px] text-gray-400">Booking &rarr; Service</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('coaching')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Coaching</h4>
+                    <p class="text-[11px] text-gray-400">Lead &rarr; Admission</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('dental')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                    <i data-lucide="smile" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Dental Care</h4>
+                    <p class="text-[11px] text-gray-400">Checkup &rarr; Treatment</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('cafe')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
+                    <i data-lucide="coffee" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Cafe & Restro</h4>
+                    <p class="text-[11px] text-gray-400">Table &rarr; Billing</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('service')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-400 shrink-0">
+                    <i data-lucide="wrench" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Auto Service</h4>
+                    <p class="text-[11px] text-gray-400">Estimate &rarr; Invoice</p>
+                </div>
+            </div>
+
+            <div onclick="openRegisterWithCategory('realestate')" class="glass-panel glass-panel-glow p-5 rounded-2xl transition flex items-center gap-3.5 cursor-pointer">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-white">Real Estate</h4>
+                    <p class="text-[11px] text-gray-400">Site Visit &rarr; Closure</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="relative z-10 max-w-7xl mx-auto px-6 py-10 border-t border-white/10 mt-16 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+        <div>
+            &copy; 2026 AutoBiz AI. Universal Business Autopilot Engine.
+        </div>
+        <div class="flex gap-6">
+            <a href="/privacy.html" class="hover:text-emerald-400 transition">Privacy Policy</a>
+            <a href="/terms.html" class="hover:text-emerald-400 transition">Terms of Service</a>
+            <a href="/support.html" class="hover:text-emerald-400 transition">Help & Support</a>
+        </div>
+    </footer>
+
+    <!-- Modal: Register Any Business (With Automatic Category Dropdown) -->
+    <div id="registerModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+
+        <div class="w-full max-w-md glass-panel p-6 sm:p-8 rounded-3xl border-emerald-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="building" class="w-5 h-5 text-emerald-400"></i> Register Your Business
+                </h3>
+                <button onclick="closeModal('registerModal')" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <p class="text-xs text-gray-400">Select your industry and get an instant AI-powered autopilot dashboard.</p>
+
+            <form id="regForm" onsubmit="submitRegister(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Select Business Category</label>
+                    <select id="rCategory" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="gym">🏋️ Gym & Fitness Center</option>
+                        <option value="clinic">🏥 Doctor & Health Clinic</option>
+                        <option value="salon">💇 Salon, Spa & Beauty</option>
+                        <option value="coaching">🏫 Coaching & Tuition Centre</option>
+                        <option value="dental">🦷 Dental Care Clinic</option>
+                        <option value="cafe">🍽️ Restaurant & Cafe</option>
+                        <option value="service">🚗 Car & Bike Service</option>
+                        <option value="realestate">🏠 Real Estate Agency</option>
+                    </select>
+                </div>
+                <input type="text" id="rName" required placeholder="Business Name (e.g. LifeCare Clinic / PowerGym)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                <input type="text" id="rOwner" required placeholder="Owner / Doctor / Director Name" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                <input type="tel" id="rPhone" required placeholder="Phone Number" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                <input type="email" id="rEmail" required placeholder="Official Email Address" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                <input type="password" id="rPass" required placeholder="Create Password" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                <button type="submit" id="regSubmitBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm">
+                    Launch Autopilot Dashboard
+                </button>
+                <div id="regMsg" class="hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Login -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-panel p-6 sm:p-8 rounded-3xl border-cyan-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="lock" class="w-5 h-5 text-cyan-400"></i> Owner Login
+                </h3>
+                <button onclick="closeModal('loginModal')" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            
+            <form id="loginForm" onsubmit="submitLogin(event)" class="space-y-4">
+                <input type="email" id="loginEmail" required placeholder="Email Address" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-cyan-400">
+                <input type="password" id="loginPassword" required placeholder="Password" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-cyan-400">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-gray-400">Owner role access</span>
+                    <a href="javascript:void(0)" onclick="closeModal('loginModal'); openModal('forgotPasswordModal')" class="text-cyan-400 hover:underline">Forgot Password?</a>
+                </div>
+                <button type="submit" id="loginSubmitBtn" class="w-full py-3 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 transition shadow-lg shadow-cyan-500/20">
+                    Sign In to Dashboard
+                </button>
+                <div id="loginMsg" class="hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Forgot Password -->
+    <div id="forgotPasswordModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-panel p-6 sm:p-8 rounded-3xl border-purple-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="key-round" class="w-5 h-5 text-purple-400"></i> Reset Password
+                </h3>
+                <button onclick="closeModal('forgotPasswordModal')" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <p class="text-xs text-gray-400">Enter your registered email address to receive an autopilot reset link.</p>
+            
+            <form id="forgotForm" onsubmit="submitForgotPassword(event)" class="space-y-4">
+                <input type="email" id="forgotEmail" required placeholder="Email Address" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-purple-400">
+                <button type="submit" id="forgotSubmitBtn" class="w-full py-3 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 transition shadow-lg shadow-purple-500/20">
+                    Send Reset Link
+                </button>
+                <div id="forgotMsg" class="hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Reset Password (Activated by Reset Token in URL) -->
+    <div id="resetPasswordModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-panel p-6 sm:p-8 rounded-3xl border-yellow-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-yellow-400"></i> Set New Password
+                </h3>
+                <button onclick="closeModal('resetPasswordModal')" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <p class="text-xs text-gray-400">Set a strong password for your business account (minimum 6 characters).</p>
+            
+            <form id="resetForm" onsubmit="submitResetPassword(event)" class="space-y-4">
+                <input type="password" id="resetNewPassword" required placeholder="New Password" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-yellow-400">
+                <input type="password" id="resetConfirmPassword" required placeholder="Confirm Password" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-yellow-400">
+                <button type="submit" id="resetSubmitBtn" class="w-full py-3 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 transition shadow-lg shadow-yellow-500/20">
+                    Update Password & Login
+                </button>
+                <div id="resetMsg" class="hidden"></div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Three.js 3D Interactive Animation Script -->
+    <script>
+        lucide.createIcons();
+
+        // Gateway Initialization (Always show during dev phase)
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('reset_token');
+            if (token) {
+                // Store token globally
+                window.resetToken = token;
+                openModal('resetPasswordModal');
+                return;
+            }
+            const showLogin = urlParams.get('login_prompt');
+            if (showLogin) {
+                openModal('loginModal');
+                return;
+            }
+
+            const gateway = document.getElementById('gatewayModal');
+            const content = document.getElementById('gatewayContent');
+            gateway.classList.remove('hidden');
+            gateway.classList.add('flex');
+            setTimeout(() => {
+                gateway.classList.remove('opacity-0');
+                gateway.classList.add('opacity-100');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        });
+
+        function closeGatewayAndSetOwner() {
+            // Note: Saving role to localStorage removed for development phase
+            const gateway = document.getElementById('gatewayModal');
+            const content = document.getElementById('gatewayContent');
+            gateway.classList.remove('opacity-100');
+            gateway.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                gateway.classList.remove('flex');
+                gateway.classList.add('hidden');
+            }, 300);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function goToLiveDashboard() {
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                window.location.href = '/dashboard.html';
+            } else {
+                openModal('loginModal');
+            }
+        }
+
+        // Live API: Register Any Business with Auto-Login
+        async function submitRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('regSubmitBtn');
+            const msg = document.getElementById('regMsg');
+            btn.disabled = true;
+            btn.innerText = "Creating Business Space...";
+
+            const phone = document.getElementById('rPhone').value.trim();
+            const pass = document.getElementById('rPass').value;
+            const email = document.getElementById('rEmail').value.trim();
+
+            if (phone.length < 10) {
+                msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Please enter a valid 10-digit phone number";
+                btn.disabled = false;
+                btn.innerText = "Launch Autopilot Dashboard";
+                return;
+            }
+
+            if (pass.length < 6) {
+                msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Password must be at least 6 characters";
+                btn.disabled = false;
+                btn.innerText = "Launch Autopilot Dashboard";
+                return;
+            }
+
+            const payload = {
+                name: document.getElementById('rName').value.trim(),
+                owner_name: document.getElementById('rOwner').value.trim(),
+                phone: phone,
+                email: email,
+                password: pass,
+                business_type: document.getElementById('rCategory').value
+            };
+
+            try {
+                const res = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-emerald-500/20 text-emerald-300 block";
+                    msg.innerText = "🎉 Account Created! Logging into your dashboard...";
+                    
+                    // Auto-Login for seamless onboarding
+                    const formData = new URLSearchParams();
+                    formData.append('username', payload.email);
+                    formData.append('password', payload.password);
+                    const loginRes = await fetch('/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData.toString()
+                    });
+                    if (loginRes.ok) {
+                        const logData = await loginRes.json();
+                        localStorage.setItem('auth_token', logData.access_token);
+                        localStorage.setItem('business_name', logData.business_name);
+                        localStorage.setItem('business_id', logData.business_id);
+                        localStorage.setItem('business_type', logData.business_type || 'gym');
+                        setTimeout(() => window.location.href = '/dashboard.html', 800);
+                        return;
+                    }
+                    setTimeout(() => {
+                        closeModal('registerModal');
+                        document.getElementById('loginEmail').value = payload.email;
+                        openModal('loginModal');
+                    }, 1200);
+                } else {
+                    msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                    msg.innerText = data.detail || "Registration failed";
+                }
+            } catch (err) {
+                msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Server connection error";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Launch Autopilot Dashboard";
+            }
+        }
+
+        // Live API: Owner Login
+        async function submitLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginSubmitBtn');
+            const msg = document.getElementById('loginMsg');
+            btn.disabled = true;
+            btn.innerText = "Signing in...";
+
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('loginEmail').value.trim());
+            formData.append('password', document.getElementById('loginPassword').value);
+
+            try {
+                const res = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+                const data = await res.json();
+                if (res.ok && data.access_token) {
+                    localStorage.setItem('auth_token', data.access_token);
+                    localStorage.setItem('business_name', data.business_name);
+                    localStorage.setItem('business_id', data.business_id);
+                    localStorage.setItem('business_type', data.business_type || 'gym');
+                    msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-emerald-500/20 text-emerald-300 block";
+                    msg.innerText = "✅ Login Successful! Redirecting...";
+                    setTimeout(() => window.location.href = '/dashboard.html', 600);
+                } else {
+                    msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                    msg.innerText = data.detail || "Invalid Email or Password";
+                }
+            } catch (err) {
+                msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Connection error.";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Sign In to Dashboard";
+            }
+        }
+
+        async function submitForgotPassword(e) {
+            e.preventDefault();
+            const btn = document.getElementById('forgotSubmitBtn');
+            const msg = document.getElementById('forgotMsg');
+            const email = document.getElementById('forgotEmail').value.trim();
+            btn.disabled = true;
+            btn.innerText = "Generating Reset Link...";
+
+            try {
+                const res = await fetch('/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-emerald-500/20 text-emerald-300 block";
+                    // For dev convenience, show the generated link so they can click it directly to test!
+                    if (data.mock_link) {
+                        msg.innerHTML = `🎉 link sent! Dev reset link (click to test):<br><a href="${data.mock_link}" class="underline text-yellow-300 font-bold block mt-2">Reset Password Now</a>`;
+                    } else {
+                        msg.innerText = "🎉 Password reset link sent successfully! Check WhatsApp/Email.";
+                    }
+                } else {
+                    msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                    msg.innerText = data.detail || "Failed to initiate reset.";
+                }
+            } catch (err) {
+                msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Connection error.";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send Reset Link";
+            }
+        }
+
+        async function submitResetPassword(e) {
+            e.preventDefault();
+            const btn = document.getElementById('resetSubmitBtn');
+            const msg = document.getElementById('resetMsg');
+            const pass1 = document.getElementById('resetNewPassword').value;
+            const pass2 = document.getElementById('resetConfirmPassword').value;
+            btn.disabled = true;
+            btn.innerText = "Updating password...";
+
+            if (pass1 !== pass2) {
+                msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Passwords do not match!";
+                btn.disabled = false;
+                btn.innerText = "Update Password & Login";
+                return;
+            }
+
+            if (pass1.length < 6) {
+                msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Password must be at least 6 characters!";
+                btn.disabled = false;
+                btn.innerText = "Update Password & Login";
+                return;
+            }
+
+            try {
+                const token = window.resetToken || new URLSearchParams(window.location.search).get('reset_token');
+                const res = await fetch('/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token, new_password: pass1 })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-emerald-500/20 text-emerald-300 block";
+                    msg.innerText = "🎉 Password updated! Logging you in...";
+                    setTimeout(() => {
+                        window.location.href = '/index.html?login_prompt=1';
+                    }, 1200);
+                } else {
+                    msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                    msg.innerText = data.detail || "Reset failed. Token might be expired or used.";
+                }
+            } catch (err) {
+                msg.className = "text-center text-xs font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Connection error.";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Update Password & Login";
+            }
+        }
+
+
+        // 3D Scene Setup
+        const canvas = document.getElementById('canvas3d');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 7;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const dumbbellGroup = new THREE.Group();
+        const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x00f5a0, metalness: 0.85, roughness: 0.2 });
+        const accentMaterial = new THREE.MeshStandardMaterial({ color: 0x00d9f5, metalness: 0.9, roughness: 0.1 });
+
+        const barGeo = new THREE.CylinderGeometry(0.18, 0.18, 3.8, 32);
+        const bar = new THREE.Mesh(barGeo, accentMaterial);
+        bar.rotation.z = Math.PI / 2;
+        dumbbellGroup.add(bar);
+
+        const plateGeo1 = new THREE.CylinderGeometry(1.2, 1.2, 0.4, 32);
+        const leftPlate1 = new THREE.Mesh(plateGeo1, metalMaterial);
+        leftPlate1.position.x = -1.4;
+        leftPlate1.rotation.z = Math.PI / 2;
+        dumbbellGroup.add(leftPlate1);
+
+        const plateGeo2 = new THREE.CylinderGeometry(1.5, 1.5, 0.35, 32);
+        const leftPlate2 = new THREE.Mesh(plateGeo2, metalMaterial);
+        leftPlate2.position.x = -1.8;
+        leftPlate2.rotation.z = Math.PI / 2;
+        dumbbellGroup.add(leftPlate2);
+
+        const rightPlate1 = new THREE.Mesh(plateGeo1, metalMaterial);
+        rightPlate1.position.x = 1.4;
+        rightPlate1.rotation.z = Math.PI / 2;
+        dumbbellGroup.add(rightPlate1);
+
+        const rightPlate2 = new THREE.Mesh(plateGeo2, metalMaterial);
+        rightPlate2.position.x = 1.8;
+        rightPlate2.rotation.z = Math.PI / 2;
+        dumbbellGroup.add(rightPlate2);
+
+        const ringGeo = new THREE.TorusGeometry(2.6, 0.04, 16, 100);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x7b2cbf, wireframe: true });
+        const torusRing = new THREE.Mesh(ringGeo, ringMat);
+        dumbbellGroup.add(torusRing);
+
+        dumbbellGroup.position.set(2.2, 0, 0);
+        scene.add(dumbbellGroup);
+
+        const particleCount = 300;
+        const particleGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] = (Math.random() - 0.5) * 22;
+            positions[i + 1] = (Math.random() - 0.5) * 22;
+            positions[i + 2] = (Math.random() - 0.5) * 22;
+        }
+
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x00d9f5, size: 0.05, transparent: true, opacity: 0.7 });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0x00f5a0, 3.5, 50);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x7b2cbf, 3.5, 50);
+        pointLight2.position.set(-5, -5, 5);
+        scene.add(pointLight2);
+
+        let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            if (window.innerWidth < 1024) dumbbellGroup.position.set(0, -1.2, -2);
+            else dumbbellGroup.position.set(2.2, 0, 0);
+        });
+
+        if (window.innerWidth < 1024) dumbbellGroup.position.set(0, -1.2, -2);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            targetX += (mouseX - targetX) * 0.05;
+            targetY += (mouseY - targetY) * 0.05;
+            dumbbellGroup.rotation.x += 0.005 + targetY * 0.02;
+            dumbbellGroup.rotation.y += 0.008 + targetX * 0.02;
+            torusRing.rotation.z -= 0.01;
+            particles.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+</body>
+</html>

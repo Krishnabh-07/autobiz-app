@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal - AutoBiz AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: #060813; color: #f3f4f6; }
+        .glass-card { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .gradient-text { background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-gradient { background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%); transition: all 0.3s ease; }
+        .btn-gradient:hover { box-shadow: 0 0 20px rgba(0, 245, 160, 0.4); transform: translateY(-2px); }
+    </style>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#00f5a0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AutoBiz AI">
+</head>
+<body class="p-4 md:p-8">
+<div class="max-w-4xl mx-auto space-y-8">
+    <header class="flex flex-col sm:flex-row justify-between items-center glass-card p-6 rounded-3xl gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20"><i data-lucide="sparkles" class="w-6 h-6 text-black"></i></div>
+            <div>
+                <h1 class="text-2xl font-bold">Welcome, <span id="userName" class="gradient-text">Member</span></h1>
+                <p class="text-sm text-gray-400" id="userPhone">Loading...</p>
+            </div>
+        </div>
+        <button onclick="logout()" class="px-5 py-2.5 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 text-sm font-semibold border border-red-500/20 transition">Logout</button>
+    </header>
+
+    <div id="loadingState" class="text-center py-20">
+        <div class="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-gray-400">Loading your profile data...</p>
+    </div>
+
+    <!-- STATE: Trial Booked -->
+    <div id="state-TRIAL_BOOKED" class="hidden">
+        <div class="glass-card p-8 rounded-3xl border-cyan-500/30 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent"></div>
+            <i data-lucide="calendar-clock" class="w-16 h-16 text-cyan-400 mx-auto mb-4 relative z-10"></i>
+            <h2 class="text-2xl font-bold text-white mb-2 relative z-10">Trial Appointment Confirmed!</h2>
+            <p class="text-gray-400 mb-6 relative z-10">Your workout slot is reserved. Please show this screen at reception.</p>
+            
+            <div class="max-w-md mx-auto bg-black/40 border border-white/10 p-5 rounded-2xl space-y-3 text-left mb-6 relative z-10">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2.5">
+                    <span class="text-xs text-gray-400">Gym / Facility</span>
+                    <span class="text-sm font-bold text-white" id="tb-gym-name">Loading...</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-2.5">
+                    <span class="text-xs text-gray-400">Assigned Time Slot</span>
+                    <span class="text-sm font-bold text-emerald-400 flex items-center gap-1" id="tb-slot-name">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i> 07:00 AM - 08:00 AM
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Pass Status</span>
+                    <span class="px-2.5 py-0.5 bg-cyan-500/20 text-cyan-300 font-extrabold rounded-full text-[11px]">ACTIVE TRIAL PASS</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4 relative z-10">
+                <button onclick="window.location.href='/explore.html'" class="px-6 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition text-xs font-semibold">Explore More</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATE: Trial Completed - Show Plans -->
+    <div id="state-TRIAL_COMPLETED" class="hidden">
+        <div class="glass-card p-8 rounded-3xl border-emerald-500/30 text-center">
+            <i data-lucide="check-circle-2" class="w-16 h-16 text-emerald-400 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold text-white mb-2">Hope you enjoyed your Trial!</h2>
+            <p class="text-gray-400 mb-8">Choose a plan to join <span id="tc-gym-name" class="font-bold text-white"></span></p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto text-left">
+                <div class="bg-black/50 p-6 rounded-2xl border border-white/10 hover:border-emerald-500/50 transition">
+                    <h3 class="font-bold text-lg mb-1">1 Month Plan</h3>
+                    <p class="text-3xl font-extrabold text-white mb-4">&#8377;800</p>
+                    <button onclick="openPayment('1 Month Plan',800)" class="w-full py-2.5 rounded-xl border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 text-sm font-bold transition">Buy Now</button>
+                </div>
+                <div class="bg-gradient-to-b from-emerald-500/10 to-black/50 p-6 rounded-2xl border border-emerald-500/50 relative transform md:-translate-y-2">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-black text-[10px] font-extrabold px-3 py-1 rounded-full uppercase">Most Popular</div>
+                    <h3 class="font-bold text-lg mb-1">3 Months VIP</h3>
+                    <p class="text-3xl font-extrabold text-emerald-400 mb-4">&#8377;2,000</p>
+                    <button onclick="openPayment('3 Months VIP',2000)" class="btn-gradient w-full py-2.5 rounded-xl text-slate-950 text-sm font-bold">Buy Now</button>
+                </div>
+                <div class="bg-black/50 p-6 rounded-2xl border border-white/10 hover:border-emerald-500/50 transition">
+                    <h3 class="font-bold text-lg mb-1">7 Months Pro</h3>
+                    <p class="text-3xl font-extrabold text-white mb-4">&#8377;4,000</p>
+                    <button onclick="openPayment('7 Months Pro',4000)" class="w-full py-2.5 rounded-xl border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 text-sm font-bold transition">Buy Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATE: Active Member -->
+    <div id="state-ACTIVE_MEMBER" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card p-8 rounded-3xl border-emerald-500/30 flex flex-col items-center text-center relative overflow-hidden">
+                <div class="absolute top-4 right-4"><span class="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-bold rounded-full"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ACTIVE</span></div>
+                <h3 class="text-lg font-bold mb-4 text-gray-300">Digital Access Pass</h3>
+                <div class="w-48 h-48 bg-white p-2 rounded-2xl mb-4 shadow-2xl shadow-emerald-500/20"><img id="memberQR" src="" class="w-full h-full rounded-xl"></div>
+                <h2 class="text-xl font-extrabold text-white" id="am-gym-name">Gym Name</h2>
+                <p class="text-emerald-400 font-semibold mt-1" id="am-plan">Active Plan</p>
+            </div>
+            <div class="glass-card p-6 rounded-3xl">
+                <h3 class="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">Membership Details</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center border-b border-white/5 pb-4"><span class="text-gray-300">Start Date</span><span class="font-bold text-white" id="am-start">--</span></div>
+                    <div class="flex justify-between items-center border-b border-white/5 pb-4"><span class="text-gray-300">Expiry Date</span><span class="font-bold text-red-300" id="am-end">--</span></div>
+                    <button class="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm font-semibold flex items-center justify-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Download Invoice</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATE: Expired Member -->
+    <div id="state-EXPIRED_MEMBER" class="hidden">
+        <div class="glass-card p-8 rounded-3xl border-red-500/30 text-center">
+            <i data-lucide="alert-triangle" class="w-16 h-16 text-red-400 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold text-white mb-2">Membership Expired</h2>
+            <p class="text-gray-400 mb-6">Plan at <span id="em-gym-name" class="font-bold text-white"></span> expired on <span id="em-end" class="text-red-300 font-bold"></span>.</p>
+            <button onclick="showRenew()" class="btn-gradient px-8 py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">Renew Membership Now</button>
+        </div>
+    </div>
+
+    <!-- STATE: New Lead -->
+    <div id="state-NEW_LEAD" class="hidden text-center py-20">
+        <i data-lucide="search" class="w-16 h-16 text-gray-500 mx-auto mb-4"></i>
+        <h2 class="text-2xl font-bold text-white mb-2">No Active Bookings</h2>
+        <p class="text-gray-400 mb-6">You don't have any active trials or memberships yet.</p>
+        <a href="/explore.html" class="inline-block px-8 py-3 rounded-xl border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 transition font-bold text-sm">Explore Nearby Facilities</a>
+    </div>
+</div>
+
+<!-- UPI Payment Modal -->
+<div id="paymentModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-sm glass-card p-6 sm:p-8 rounded-3xl border-emerald-500/30 relative space-y-4 text-center">
+        <button onclick="closePayment()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&#x2715;</button>
+        <h3 class="text-xl font-extrabold text-white">Direct UPI Payment</h3>
+        <p class="text-xs text-gray-400">Zero commission. 100% money goes directly to gym owner.</p>
+        
+        <div class="bg-white p-2.5 rounded-2xl w-44 h-44 mx-auto shadow-xl shadow-emerald-500/20">
+            <img id="upiQR" src="" class="w-full h-full rounded-xl">
+        </div>
+        
+        <div class="bg-black/50 p-3.5 rounded-xl border border-white/10 text-left space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-gray-400">Selected Plan</span><span class="font-bold text-white" id="payPlan">--</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Amount Payable</span><span class="font-bold text-emerald-400" id="payAmount">--</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Paying Directly To</span><span class="font-bold text-white" id="payGymName">--</span></div>
+        </div>
+
+        <div class="text-left">
+            <label class="block text-[11px] font-semibold text-gray-300 mb-1">UPI Ref / UTR No. (Optional)</label>
+            <input type="text" id="payUtr" placeholder="e.g. 423891029384" class="w-full px-3.5 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-emerald-400">
+        </div>
+
+        <button onclick="confirmPayment()" id="btnConfirmPay" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
+            I Have Paid via UPI ➔ Activate Pass
+        </button>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    const phone = localStorage.getItem('member_phone');
+    let currentGymData = null;
+    let selectedPlan = '';
+    let selectedPlanAmount = 0;
+
+    if (!phone) { window.location.href = '/explore.html'; }
+
+    async function loadProfile() {
+        try {
+            const res = await fetch('/auth/member/status/' + encodeURIComponent(phone));
+            if (!res.ok) throw new Error('status ' + res.status);
+            const data = await res.json();
+            document.getElementById('loadingState').classList.add('hidden');
+            if (data.data) {
+                document.getElementById('userName').innerText = data.data.full_name || data.data.name || phone;
+            }
+            document.getElementById('userPhone').innerText = phone;
+            currentGymData = data.gym_data;
+            document.querySelectorAll('[id^="state-"]').forEach(el => el.classList.add('hidden'));
+            const el = document.getElementById('state-' + data.state);
+            if (el) el.classList.remove('hidden');
+            else document.getElementById('state-NEW_LEAD').classList.remove('hidden');
+
+            if (data.state === 'TRIAL_BOOKED') {
+                document.getElementById('tb-gym-name').innerText = data.gym_data ? data.gym_data.name : 'Unknown Gym';
+                if (document.getElementById('tb-slot-name') && data.data) {
+                    document.getElementById('tb-slot-name').innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5"></i> ${data.data.time_slot || 'Standard Batch'}`;
+                    lucide.createIcons();
+                }
+            } else if (data.state === 'TRIAL_COMPLETED') {
+                document.getElementById('tc-gym-name').innerText = data.gym_data ? data.gym_data.name : 'the club';
+            } else if (data.state === 'ACTIVE_MEMBER') {
+                const gymName = data.gym_data ? data.gym_data.name : 'Your Gym';
+                document.getElementById('am-gym-name').innerText = gymName;
+                document.getElementById('am-plan').innerText = data.data.membership_type || 'Active Plan';
+                document.getElementById('am-start').innerText = data.data.start_date || '--';
+                document.getElementById('am-end').innerText = data.data.end_date || '--';
+                const qrData = encodeURIComponent(`AUTOBIZ-PASS|${phone}|${gymName}|${data.data.membership_type}|VALID`);
+                document.getElementById('memberQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
+            } else if (data.state === 'EXPIRED_MEMBER') {
+                document.getElementById('em-gym-name').innerText = data.gym_data ? data.gym_data.name : 'Unknown';
+                document.getElementById('em-end').innerText = data.data.end_date || '--';
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('state-NEW_LEAD').classList.remove('hidden');
+        }
+    }
+
+    function showRenew() {
+        document.querySelectorAll('[id^="state-"]').forEach(el => el.classList.add('hidden'));
+        document.getElementById('state-TRIAL_COMPLETED').classList.remove('hidden');
+    }
+
+    function openPayment(planName, amount) {
+        selectedPlan = planName;
+        selectedPlanAmount = amount;
+        document.getElementById('payPlan').innerText = planName;
+        document.getElementById('payAmount').innerText = '\u20B9' + amount;
+        const gymName = currentGymData ? currentGymData.name : 'Gym Owner';
+        document.getElementById('payGymName').innerText = gymName;
+        const upiId = currentGymData && currentGymData.upi_id ? currentGymData.upi_id : 'autobiz@upi';
+        const upiUrl = 'upi://pay?pa=' + upiId + '&pn=' + encodeURIComponent(gymName) + '&am=' + amount + '&cu=INR';
+        document.getElementById('upiQR').src = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=' + encodeURIComponent(upiUrl);
+        document.getElementById('paymentModal').classList.remove('hidden');
+        document.getElementById('paymentModal').classList.add('flex');
+    }
+
+    function closePayment() {
+        document.getElementById('paymentModal').classList.add('hidden');
+        document.getElementById('paymentModal').classList.remove('flex');
+    }
+
+    async function confirmPayment() {
+        const btn = document.getElementById('btnConfirmPay');
+        btn.disabled = true;
+        btn.innerText = "Verifying & Activating Pass...";
+
+        const gymId = currentGymData ? currentGymData.id : 1;
+        const utr = document.getElementById('payUtr').value;
+
+        const payload = {
+            phone: phone,
+            gym_id: gymId,
+            plan_name: selectedPlan || 'Monthly Plan',
+            amount: selectedPlanAmount || 800,
+            utr_number: utr || null,
+            payment_mode: 'UPI'
+        };
+
+        try {
+            const res = await fetch('/payments/customer-confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                closePayment();
+                alert('🎉 Payment Confirmed! Your Digital Member Access Pass is now active.');
+                loadProfile();
+            } else {
+                alert('Payment verification failed. Please try again or contact the owner.');
+            }
+        } catch (err) {
+            alert('Network error while confirming payment.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "I Have Paid via UPI ➔ Activate Pass";
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('member_token');
+        localStorage.removeItem('member_phone');
+        window.location.href = '/explore.html';
+    }
+
+    loadProfile();
+</script>
+<script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+</body>
+</html>

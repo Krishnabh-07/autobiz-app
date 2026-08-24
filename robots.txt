@@ -1,0 +1,11 @@
+﻿User-agent: *
+Allow: /
+Allow: /explore.html
+Allow: /manifest.json
+Allow: /static/
+
+Disallow: /dashboard.html
+Disallow: /superadmin.html
+Disallow: /customer_portal.html
+
+Sitemap: https://autobiz-app.onrender.com/sitemap.xml
