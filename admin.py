@@ -198,3 +198,132 @@ def get_platform_income(db: Session = Depends(get_db), _=Depends(verify_admin)):
             "500_businesses": 500 * PLATFORM_FEE_PER_MONTH
         }
     }
+
+
+# --- 6. GOD MODE: Owners Multi-Branch Portfolio View ---
+@router.get("/owners")
+def get_god_mode_owners(db: Session = Depends(get_db), _=Depends(verify_admin)):
+    gyms = db.query(models.Gym).all()
+    
+    # Group by owner identity (owner_email or email)
+    owners_map = {}
+    for g in gyms:
+        o_email = g.owner_email or g.email
+        if o_email not in owners_map:
+            owners_map[o_email] = {
+                "owner_name": g.owner_name,
+                "owner_email": o_email,
+                "phone": g.phone,
+                "branches": []
+            }
+        
+        m_count = db.query(func.count(models.Member.id)).filter(models.Member.gym_id == g.id).scalar() or 0
+        rev = db.query(func.sum(models.Payment.amount)).filter(models.Payment.gym_id == g.id, models.Payment.payment_status == "completed").scalar() or Decimal("0.00")
+        pending_rev = db.query(func.sum(models.Payment.amount)).filter(models.Payment.gym_id == g.id, models.Payment.payment_status == "pending").scalar() or Decimal("0.00")
+        
+        owners_map[o_email]["branches"].append({
+            "id": g.id,
+            "name": g.name,
+            "business_type": g.business_type or "gym",
+            "city": g.city or g.village_or_town or "Guwahati",
+            "state": g.state or "Assam",
+            "district": g.district or "Kamrup",
+            "pincode": g.pincode or "781001",
+            "phone": g.phone,
+            "upi_id": g.upi_id or "Not set",
+            "subscription_status": g.subscription_status or "trial",
+            "subscription_end": str(g.subscription_end) if g.subscription_end else "Trial",
+            "members_count": m_count,
+            "revenue": float(rev),
+            "pending": float(pending_rev),
+            "is_main_branch": g.is_main_branch if hasattr(g, 'is_main_branch') else True,
+            "created_at": str(g.created_at.date()) if g.created_at else "N/A"
+        })
+    
+    owners_list = []
+    for email, o in owners_map.items():
+        total_branches = len(o["branches"])
+        active_branches = sum(1 for b in o["branches"] if b["subscription_status"] == "active")
+        total_members = sum(b["members_count"] for b in o["branches"])
+        total_revenue = sum(b["revenue"] for b in o["branches"])
+        total_paid = active_branches * PLATFORM_FEE_PER_MONTH
+        total_due = (total_branches - active_branches) * PLATFORM_FEE_PER_MONTH
+        
+        overall_status = "Active" if active_branches == total_branches else ("Partial Active" if active_branches > 0 else "Trial / Due")
+        
+        owners_list.append({
+            "owner_name": o["owner_name"],
+            "owner_email": o["owner_email"],
+            "phone": o["phone"],
+            "total_branches": total_branches,
+            "active_branches": active_branches,
+            "total_members": total_members,
+            "total_revenue": total_revenue,
+            "subscription_status": overall_status,
+            "total_paid_to_platform": total_paid,
+            "total_pending_to_platform": total_due,
+            "branches": o["branches"]
+        })
+        
+    return owners_list
+
+
+# --- 7. GOD MODE: Full Administrative Branch Inspector ---
+@router.get("/branches/{branch_id}/full-view")
+def get_branch_full_administrative_view(branch_id: int, db: Session = Depends(get_db), _=Depends(verify_admin)):
+    gym = db.query(models.Gym).filter(models.Gym.id == branch_id).first()
+    if not gym:
+        raise HTTPException(status_code=404, detail="Branch not found")
+        
+    members = db.query(models.Member).filter(models.Member.gym_id == branch_id).all()
+    leads = db.query(models.Lead).filter(models.Lead.gym_id == branch_id).all()
+    payments = db.query(models.Payment).filter(models.Payment.gym_id == branch_id).all()
+    invoices = db.query(models.Invoice).filter(models.Invoice.gym_id == branch_id).all()
+    staff = db.query(models.Staff).filter(models.Staff.gym_id == branch_id).all()
+    audit_logs = db.query(models.AuditLog).filter(models.AuditLog.gym_id == branch_id).order_by(models.AuditLog.created_at.desc()).limit(20).all()
+    
+    return {
+        "branch": {
+            "id": gym.id,
+            "name": gym.name,
+            "owner_name": gym.owner_name,
+            "owner_email": gym.owner_email or gym.email,
+            "phone": gym.phone,
+            "business_type": gym.business_type,
+            "address_line": gym.address_line,
+            "state": gym.state,
+            "district": gym.district,
+            "city": gym.city,
+            "pincode": gym.pincode,
+            "upi_id": gym.upi_id,
+            "subscription_status": gym.subscription_status,
+            "subscription_end": str(gym.subscription_end) if gym.subscription_end else None,
+            "autopilot_enabled": gym.autopilot_enabled if hasattr(gym, 'autopilot_enabled') else True
+        },
+        "stats": {
+            "members_count": len(members),
+            "leads_count": len(leads),
+            "total_revenue": sum(float(p.amount) for p in payments if p.payment_status == "completed"),
+            "staff_count": len(staff),
+            "invoices_count": len(invoices)
+        },
+        "recent_members": [{"id": m.id, "name": m.full_name, "phone": m.phone, "plan": m.membership_type, "active": m.is_active} for m in members[:10]],
+        "recent_payments": [{"id": p.id, "amount": float(p.amount), "mode": p.payment_mode, "status": p.payment_status, "date": str(p.payment_date)} for p in payments[:10]],
+        "recent_audit": [{"action": a.action, "actor": a.actor_name, "details": a.details, "time": str(a.created_at)} for a in audit_logs]
+    }
+
+
+# --- 8. GOD MODE: 1-Click Activate Branch ---
+@router.post("/branches/{branch_id}/activate")
+def activate_branch_admin(branch_id: int, days: int = 30, db: Session = Depends(get_db), _=Depends(verify_admin)):
+    from datetime import date, timedelta
+    gym = db.query(models.Gym).filter(models.Gym.id == branch_id).first()
+    if not gym:
+        raise HTTPException(status_code=404, detail="Branch not found")
+        
+    gym.subscription_status = "active"
+    gym.subscription_start = date.today()
+    gym.subscription_end = date.today() + timedelta(days=days)
+    db.commit()
+    db.refresh(gym)
+    return {"status": "success", "message": f"Branch '{gym.name}' activated for {days} days.", "branch_id": branch_id}

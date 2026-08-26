@@ -395,7 +395,124 @@ class BookingSlotResponse(BaseModel):
         from_attributes = True
 
 
-# --- Onboarding Schemas ---
+# --- Multi-Branch Schemas ---
+
+class BranchCreate(BaseModel):
+    name: str
+    business_type: str
+    phone: str
+    address_line: str
+    state: str
+    district: str
+    city: str
+    pincode: str
+    timings: Optional[str] = "06:00 AM - 10:00 PM"
+    upi_id: Optional[str] = None
+    doctor_specialization: Optional[str] = None
+    consultation_fee: Optional[Decimal] = Decimal("500.00")
+
+class BranchResponse(BaseModel):
+    id: int
+    name: str
+    owner_name: str
+    owner_email: Optional[str] = None
+    phone: str
+    business_type: str
+    state: Optional[str] = None
+    district: Optional[str] = None
+    city: Optional[str] = None
+    pincode: Optional[str] = None
+    upi_id: Optional[str] = None
+    subscription_status: str
+    is_main_branch: bool
+    total_members: Optional[int] = 0
+    total_revenue: Optional[float] = 0.0
+    pending_revenue: Optional[float] = 0.0
+
+    class Config:
+        from_attributes = True
+
+class BulkSubscriptionRequest(BaseModel):
+    owner_email: str
+    utr_number: str
+    total_branches: int
+    total_amount: Decimal
+
+# --- Timeline & Document Schemas ---
+
+class TimelineEventCreate(BaseModel):
+    member_id: int
+    event_type: str
+    title: str
+    description: Optional[str] = None
+    staff_name: Optional[str] = "Staff"
+    amount: Optional[Decimal] = None
+
+class TimelineEventResponse(BaseModel):
+    id: int
+    gym_id: int
+    member_id: int
+    event_type: str
+    title: str
+    description: Optional[str] = None
+    staff_name: str
+    amount: Optional[Decimal] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class DocumentCreate(BaseModel):
+    member_id: Optional[int] = None
+    doc_type: str
+    title: str
+    file_url: Optional[str] = None
+    notes: Optional[str] = None
+
+class DocumentResponse(BaseModel):
+    id: int
+    gym_id: int
+    member_id: Optional[int] = None
+    doc_type: str
+    title: str
+    file_url: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Customer Self-Booking Schemas ---
+
+class CustomerSelfBookRequest(BaseModel):
+    gym_id: int
+    customer_name: str
+    customer_phone: str
+    customer_email: Optional[str] = None
+    service_or_plan_name: str
+    booking_date: date
+    time_slot: str
+    amount: Decimal
+    payment_mode: Optional[str] = "UPI"
+    utr_number: Optional[str] = None
+    notes: Optional[str] = None
+
+# --- Role-Aware AI Assistant Schemas ---
+
+class AIChatAssistantRequest(BaseModel):
+    role: str = "customer" # "customer" or "owner"
+    query: Optional[str] = None
+    message: Optional[str] = None
+    context_phone: Optional[str] = None # For customer looking up own membership
+    gym_id: Optional[int] = None
+
+class AIChatAssistantResponse(BaseModel):
+    answer: str
+    reply: Optional[str] = None
+    role: str
+    action_type: Optional[str] = "info"
+    quick_links: Optional[List[dict]] = None
+
 
 class OnboardingData(BaseModel):
     business_type: str
@@ -403,6 +520,7 @@ class OnboardingData(BaseModel):
     upi_id: Optional[str] = None
     primary_service: Optional[str] = "Standard Membership"
     primary_price: Optional[Decimal] = Decimal("1000.00")
+
 
 
 

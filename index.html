@@ -134,11 +134,9 @@
         </div>
 
         <nav class="hidden md:flex items-center gap-8 glass-panel px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
-            <a href="/explore.html" class="hover:text-emerald-400 font-semibold text-emerald-300 transition">📍 Explore Nearby</a>
             <a href="#industries" class="hover:text-cyan-400 transition">Industries</a>
             <a href="#howitworks" class="hover:text-cyan-400 transition">How It Works</a>
-            <a href="javascript:void(0)" onclick="goToLiveDashboard()" class="hover:text-purple-400 transition">Owner Portal</a>
-            <a href="/docs" target="_blank" class="hover:text-white transition">API Engine</a>
+            <a href="#pricing" class="hover:text-cyan-400 transition">Pricing</a>
         </nav>
 
         <div class="flex items-center gap-3">
@@ -569,10 +567,13 @@
                     if (loginRes.ok) {
                         const logData = await loginRes.json();
                         localStorage.setItem('auth_token', logData.access_token);
-                        localStorage.setItem('business_name', logData.business_name);
-                        localStorage.setItem('business_id', logData.business_id);
+                        localStorage.setItem('autobiz_token', logData.access_token);
+                        localStorage.setItem('business_name', logData.business_name || '');
+                        localStorage.setItem('business_id', logData.business_id || '');
                         localStorage.setItem('business_type', logData.business_type || 'gym');
-                        setTimeout(() => window.location.href = '/dashboard.html', 800);
+                        // New registration → always show subscription modal
+                        closeModal('registerModal');
+                        openModal('subscriptionPayModal');
                         return;
                     }
                     setTimeout(() => {
@@ -613,13 +614,24 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.access_token) {
+                    // Save token under BOTH keys for compatibility
                     localStorage.setItem('auth_token', data.access_token);
-                    localStorage.setItem('business_name', data.business_name);
-                    localStorage.setItem('business_id', data.business_id);
+                    localStorage.setItem('autobiz_token', data.access_token);
+                    localStorage.setItem('business_name', data.business_name || '');
+                    localStorage.setItem('business_id', data.business_id || '');
                     localStorage.setItem('business_type', data.business_type || 'gym');
+
                     msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-emerald-500/20 text-emerald-300 block";
-                    msg.innerText = "✅ Login Successful! Redirecting...";
-                    setTimeout(() => window.location.href = '/dashboard.html', 600);
+                    msg.innerText = "✅ Login Successful! Loading dashboard...";
+
+                    // Check subscription status — show payment popup if trial/expired
+                    const subStatus = data.subscription_status || 'trial';
+                    if (subStatus === 'trial' || subStatus === 'expired') {
+                        closeModal('loginModal');
+                        openModal('subscriptionPayModal');
+                    } else {
+                        setTimeout(() => window.location.href = '/dashboard.html', 600);
+                    }
                 } else {
                     msg.className = "text-center text-sm font-semibold p-3 rounded-xl bg-red-500/20 text-red-300 block";
                     msg.innerText = data.detail || "Invalid Email or Password";
@@ -826,5 +838,120 @@
         animate();
     </script>
 <script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+<div id="pwaInstallBtn" style="display:none;position:fixed;bottom:80px;right:20px;z-index:9999;background:linear-gradient(135deg,#00f5a0,#00d9f5);color:#000;font-weight:700;padding:12px 20px;border-radius:50px;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,245,160,0.4);font-size:14px;" onclick="installPWA()">📲 Install AutoBiz App</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: SUBSCRIPTION PAYMENT (shown after login/register)
+════════════════════════════════════════════════════════ -->
+<div id="subscriptionPayModal" class="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl hidden items-center justify-center p-4">
+    <div class="w-full max-w-md glass-panel p-6 sm:p-8 rounded-3xl border border-yellow-500/40 space-y-5 shadow-2xl shadow-yellow-500/10">
+        <div class="text-center space-y-2">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-yellow-400 to-orange-500 flex items-center justify-center mx-auto text-black text-2xl font-black shadow-lg shadow-yellow-500/30">⚡</div>
+            <h2 class="text-2xl font-extrabold text-white">Activate Your AutoBiz Plan</h2>
+            <p class="text-gray-400 text-sm">Pay ₹1,500/month per branch to unlock full automation — AI, CRM, Payments, WhatsApp bot.</p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 border border-yellow-500/20 space-y-3">
+            <div class="text-center">
+                <div class="text-4xl font-black text-yellow-400">₹1,500</div>
+                <div class="text-xs text-gray-400 mt-1">Per Branch / Per Month</div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center gap-1.5 text-gray-300"><span class="text-emerald-400">✓</span> Full CRM & Member DB</div>
+                <div class="flex items-center gap-1.5 text-gray-300"><span class="text-emerald-400">✓</span> 24/7 WhatsApp AI Bot</div>
+                <div class="flex items-center gap-1.5 text-gray-300"><span class="text-emerald-400">✓</span> Direct UPI Payments (0%)</div>
+                <div class="flex items-center gap-1.5 text-gray-300"><span class="text-emerald-400">✓</span> AI AutoPilot Automation</div>
+                <div class="flex items-center gap-1.5 text-gray-300"><span class="text-emerald-400">✓</span> Smart Invoices & Vault</div>
+                <div class="flex items-center gap-1.5 text-gray-300"><span class="text-emerald-400">✓</span> Multi-Branch Management</div>
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Pay via UPI</div>
+            <div class="font-mono text-emerald-400 text-lg font-extrabold text-center py-3 bg-black/50 rounded-xl border border-emerald-500/20">autobiz@okaxis</div>
+            <div class="text-[10px] text-gray-500 text-center">Scan QR or copy UPI ID above → Pay → Enter UTR below</div>
+        </div>
+
+        <div class="space-y-3">
+            <input type="text" id="subPayUtr" placeholder="Enter UTR / Transaction ID after payment *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white font-mono outline-none focus:border-emerald-400">
+            <button onclick="submitSubscriptionPay()" class="w-full py-3 rounded-xl font-bold text-slate-950 text-sm bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 transition shadow-lg shadow-yellow-500/20">
+                ✅ I've Paid — Activate My Dashboard
+            </button>
+            <button onclick="skipSubscriptionAndEnter()" class="w-full py-2 rounded-xl font-semibold text-gray-400 text-xs hover:text-white transition">
+                Continue with 7-Day Free Trial (Limited Features) →
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function submitSubscriptionPay() {
+    const utr = document.getElementById('subPayUtr').value.trim();
+    if (!utr) { alert('Please enter your UTR / Transaction ID after making payment.'); return; }
+    const tok = localStorage.getItem('autobiz_token');
+    try {
+        const res = await fetch('/owner/branches/pay-bulk-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+            body: JSON.stringify({ total_branches: 1, total_amount: 1500, utr_number: utr, notes: 'Initial subscription via login modal' })
+        });
+        const d = await res.json();
+        closeModal('subscriptionPayModal');
+        alert('✅ Payment recorded! Your AutoBiz dashboard is now fully active.');
+        window.location.href = '/dashboard.html';
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+}
+function skipSubscriptionAndEnter() {
+    closeModal('subscriptionPayModal');
+    window.location.href = '/dashboard.html';
+}
+
+// ─── FLOATING AI ASSISTANT (INDEX) ─────────────────────────
+async function sendLandingAiChat() {
+    const input = document.getElementById('landingAiInput');
+    const log = document.getElementById('landingAiLog');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    log.innerHTML += `<div class="text-right"><span class="inline-block bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">${msg}</span></div>`;
+    log.scrollTop = log.scrollHeight;
+    try {
+        const res = await fetch('/ai/chat-assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg, role: 'customer' })
+        });
+        const d = await res.json();
+        const reply = d.reply || d.answer || 'How can I assist your business search today?';
+        log.innerHTML += `<div class="text-left"><span class="inline-block bg-white/10 text-gray-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">🤖 ${reply}</span></div>`;
+        log.scrollTop = log.scrollHeight;
+    } catch(e) {
+        log.innerHTML += `<div class="text-xs text-red-400 pl-1">Error connecting to AI.</div>`;
+    }
+}
+</script>
+
+<!-- Floating AI Assistant Button & Drawer -->
+<div id="landingAiWidget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2">
+    <div id="landingAiPanel" class="hidden w-80 glass-panel rounded-2xl border border-emerald-500/30 shadow-2xl overflow-hidden" style="background:rgba(6,8,19,0.96)">
+        <div class="px-4 py-3 bg-black/50 border-b border-white/10 flex justify-between items-center">
+            <span class="text-xs font-extrabold text-white flex items-center gap-1.5">🤖 AutoBiz AI Assistant</span>
+            <button onclick="document.getElementById('landingAiPanel').classList.add('hidden')" class="text-gray-400 hover:text-white text-xs">✕</button>
+        </div>
+        <div id="landingAiLog" class="h-52 overflow-y-auto p-3 space-y-2 text-xs">
+            <div class="text-left"><span class="inline-block bg-white/10 text-gray-200 px-3 py-1.5 rounded-xl text-xs">🤖 Namaste! I am AutoBiz AI. Ask me how to book doctors/gyms, explore facilities near you, or grow your business!</span></div>
+        </div>
+        <div class="px-3 py-3 border-t border-white/10 flex gap-2">
+            <input type="text" id="landingAiInput" onkeypress="if(event.key==='Enter') sendLandingAiChat()" placeholder="Ask anything..." class="flex-1 px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-xs text-white outline-none focus:border-emerald-400">
+            <button onclick="sendLandingAiChat()" class="btn-gradient px-3 py-2 rounded-xl text-slate-950 font-bold text-xs">Ask</button>
+        </div>
+    </div>
+    <button onclick="document.getElementById('landingAiPanel').classList.toggle('hidden')" class="w-13 h-13 p-3.5 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-2xl hover:scale-110 transition-transform" title="Ask AutoBiz AI">
+        🤖
+    </button>
+</div>
+
 </body>
 </html>

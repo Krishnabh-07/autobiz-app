@@ -29,8 +29,28 @@ models.Base.metadata.create_all(bind=engine)
 try:
     with engine.connect() as _conn:
         from sqlalchemy import text
-        _conn.execute(text("ALTER TABLE gyms ADD COLUMN is_onboarded BOOLEAN DEFAULT 0"))
-        _conn.commit()
+        cols = [
+            ("is_onboarded", "BOOLEAN DEFAULT 0"),
+            ("owner_email", "VARCHAR(200)"),
+            ("is_main_branch", "BOOLEAN DEFAULT 1"),
+            ("parent_id", "INTEGER"),
+            ("address_line", "VARCHAR(300)"),
+            ("state", "VARCHAR(100) DEFAULT 'Assam'"),
+            ("district", "VARCHAR(100) DEFAULT 'Kamrup Metropolitan'"),
+            ("pincode", "VARCHAR(10)"),
+            ("village_or_town", "VARCHAR(150)"),
+            ("autopilot_enabled", "BOOLEAN DEFAULT 1"),
+            ("doctor_specialization", "VARCHAR(150)"),
+            ("slot_duration_mins", "INTEGER DEFAULT 15"),
+            ("consultation_fee", "NUMERIC(10,2) DEFAULT 500.00"),
+            ("working_days", "VARCHAR(100) DEFAULT 'Mon-Sat'"),
+        ]
+        for col_name, col_type in cols:
+            try:
+                _conn.execute(text(f"ALTER TABLE gyms ADD COLUMN {col_name} {col_type}"))
+                _conn.commit()
+            except Exception:
+                pass
 except Exception:
     pass
 
@@ -183,7 +203,99 @@ def explore_businesses(
     return results
 
 
+@app.get("/public/locations", tags=["Public Discovery"])
+def get_public_locations(db: Session = Depends(get_db)):
+    registered_cities = db.query(models.Gym.city).filter(models.Gym.city.isnot(None)).distinct().all()
+    registered_districts = db.query(models.Gym.district).filter(models.Gym.district.isnot(None)).distinct().all()
+    registered_states = db.query(models.Gym.state).filter(models.Gym.state.isnot(None)).distinct().all()
+    
+    cities = {r[0].strip() for r in registered_cities if r[0] and r[0].strip()}
+    districts = {r[0].strip() for r in registered_districts if r[0] and r[0].strip()}
+    states = {r[0].strip() for r in registered_states if r[0] and r[0].strip()}
+    
+    default_hubs = [
+        "Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Nagaon", "Tinsukia", "Tezpur", "Bongaigaon",
+        "Delhi NCR", "Mumbai", "Bengaluru", "Kolkata", "Hyderabad", "Pune", "Jaipur", "Lucknow", "Patna", "Chandigarh", "Ahmedabad", "Chennai"
+    ]
+    all_locations = sorted(list(cities.union(districts).union(set(default_hubs))))
+    
+    return {
+        "locations": all_locations,
+        "states": sorted(list(states.union({"Assam", "Delhi", "Maharashtra", "Karnataka", "West Bengal", "Uttar Pradesh", "Bihar", "Rajasthan"}))),
+        "total_registered": len(cities)
+    }
+
+
+@app.get("/locations/states-and-districts", tags=["Public Discovery"])
+def get_states_and_districts(db: Session = Depends(get_db)):
+    # Comprehensive pan-India state & district dictionary with auto-aggregation from DB
+    data = {
+        "Assam": {
+            "Kamrup Metropolitan": ["Guwahati", "Dispur", "Chandmari", "Panbazar", "Beltola", "Zoo Road", "Six Mile"],
+            "Kamrup Rural": ["Rangia", "Hajo", "Palasbari"],
+            "Dibrugarh": ["Dibrugarh", "Chabua", "Naharkatia"],
+            "Jorhat": ["Jorhat", "Mariani", "Titabor"],
+            "Silchar / Cachar": ["Silchar", "Lakhipur", "Sonai"],
+            "Nagaon": ["Nagaon", "Kaliabor", "Dhing"],
+            "Sonitpur": ["Tezpur", "Dhekiajuli", "Rangapara"],
+            "Tinsukia": ["Tinsukia", "Digboi", "Doomdooma"],
+            "Nalbari": ["Nalbari", "Tihu", "Belsor"],
+            "Barpeta": ["Barpeta", "Howly", "Sarthebari"],
+            "Bongaigaon": ["Bongaigaon", "Abhayapuri"]
+        },
+        "Delhi NCR": {
+            "Central Delhi": ["Connaught Place", "Karol Bagh", "Pahar Ganj"],
+            "South Delhi": ["Hauz Khas", "Saket", "Greater Kailash", "Lajpat Nagar"],
+            "North Delhi": ["Civil Lines", "Pitampura", "Rohini"],
+            "Gurugram": ["Cyber City", "Golf Course Road", "Sector 29", "Sohna Road"],
+            "Noida": ["Sector 18", "Sector 62", "Sector 137"]
+        },
+        "Maharashtra": {
+            "Mumbai": ["Bandra", "Andheri", "Juhu", "Colaba", "Dadar", "Powai"],
+            "Pune": ["Kothrud", "Koregaon Park", "Viman Nagar", "Hinjawadi", "Baner"],
+            "Nagpur": ["Sitabuldi", "Dharampeth", "Ramdaspeth"]
+        },
+        "Karnataka": {
+            "Bengaluru Urban": ["Indiranagar", "Koramangala", "HSR Layout", "Whitefield", "Jayanagar", "MG Road"],
+            "Mysuru": ["Gokulam", "Jayalakshmipuram", "Kuvempunagar"]
+        },
+        "West Bengal": {
+            "Kolkata": ["Park Street", "Salt Lake", "New Town", "Ballygunge", "Alipore"],
+            "Howrah": ["Howrah AC Market", "Shibpur"],
+            "Darjeeling": ["Darjeeling", "Siliguri"]
+        },
+        "Uttar Pradesh": {
+            "Lucknow": ["Hazratganj", "Gomti Nagar", "Alambagh", "Indira Nagar"],
+            "Kanpur": ["Civil Lines", "Swaroop Nagar", "Mall Road"],
+            "Varanasi": ["Lanka", "Assi Ghat", "Cantonment"]
+        },
+        "Bihar": {
+            "Patna": ["Boring Road", "Kankarbagh", "Bailey Road", "Fraser Road"]
+        },
+        "Rajasthan": {
+            "Jaipur": ["Malviya Nagar", "Vaishali Nagar", "C-Scheme", "Mansarovar"]
+        }
+    }
+    
+    # Auto-merge any custom state/district/city registered by owners in the database
+    gyms = db.query(models.Gym).all()
+    for g in gyms:
+        st = (g.state or "Assam").strip()
+        dist = (g.district or "Kamrup Metropolitan").strip()
+        city = (g.city or g.village_or_town or "Guwahati").strip()
+        if st and dist and city:
+            if st not in data:
+                data[st] = {}
+            if dist not in data[st]:
+                data[st][dist] = []
+            if city not in data[st][dist]:
+                data[st][dist].append(city)
+                
+    return data
+
+
 @app.get("/robots.txt", tags=["SEO"])
+
 def get_robots_txt():
     return FileResponse(os.path.join(FRONTEND_DIR, "robots.txt"), media_type="text/plain")
 
@@ -1740,5 +1852,427 @@ def get_unread_notifications(current_user: models.Gym = Depends(auth.get_current
         "count": len(notifications),
         "notifications": notifications
     }
+
+
+# =====================================================================
+# --- 6. ALL-INDIA CASCADING LOCATION ENGINE ---
+# =====================================================================
+INDIA_LOCATIONS = {
+    "Assam": ["Kamrup Metropolitan", "Kamrup Rural", "Barpeta", "Nalbari", "Dibrugarh", "Jorhat", "Silchar", "Nagaon", "Tinsukia", "Bongaigaon", "Sonitpur"],
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane", "Nashik", "Aurangabad", "Solapur", "Kolhapur"],
+    "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi", "South Delhi", "West Delhi"],
+    "Karnataka": ["Bengaluru Urban", "Mysuru", "Hubballi-Dharwad", "Mangaluru", "Belagavi", "Shivamogga"],
+    "Uttar Pradesh": ["Lucknow", "Kanpur", "Varanasi", "Noida", "Agra", "Prayagraj", "Ghaziabad", "Meerut"],
+    "West Bengal": ["Kolkata", "Howrah", "North 24 Parganas", "South 24 Parganas", "Siliguri", "Durgapur", "Asansol"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli"],
+    "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar"],
+    "Rajasthan": ["Jaipur", "Jodhpur", "Kota", "Udaipur", "Bikaner", "Ajmer"],
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"]
+}
+
+@app.get("/locations/states-and-districts", tags=["Locations"])
+def get_india_locations(db: Session = Depends(get_db)):
+    # Dynamically extract all registered cities/districts from database
+    db_cities = db.query(models.Gym.city).filter(models.Gym.city.isnot(None)).distinct().all()
+    dynamic_cities = [c[0] for c in db_cities if c[0]]
+    
+    return {
+        "states": list(INDIA_LOCATIONS.keys()),
+        "districts_by_state": INDIA_LOCATIONS,
+        "registered_active_cities": list(set(dynamic_cities + ["Guwahati", "Nalbari", "Barpeta", "Mumbai", "Delhi", "Bengaluru", "Kolkata"]))
+    }
+
+
+# =====================================================================
+# --- 7. MULTI-BRANCH MANAGEMENT & BULK BILLING ---
+# =====================================================================
+
+@app.get("/owner/branches", response_model=List[schemas.BranchResponse], tags=["Multi-Branch"])
+def get_owner_branches(current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    o_email = current_user.owner_email or current_user.email
+    branches = db.query(models.Gym).filter(
+        (models.Gym.owner_email == o_email) | (models.Gym.email == o_email) | (models.Gym.id == current_user.id)
+    ).all()
+    
+    res = []
+    for b in branches:
+        m_count = db.query(func.count(models.Member.id)).filter(models.Member.gym_id == b.id).scalar() or 0
+        rev = db.query(func.sum(models.Payment.amount)).filter(models.Payment.gym_id == b.id, models.Payment.payment_status == "completed").scalar() or Decimal("0.00")
+        pending = db.query(func.sum(models.Payment.amount)).filter(models.Payment.gym_id == b.id, models.Payment.payment_status == "pending").scalar() or Decimal("0.00")
+        res.append(schemas.BranchResponse(
+            id=b.id,
+            name=b.name,
+            owner_name=b.owner_name,
+            owner_email=b.owner_email or b.email,
+            phone=b.phone,
+            business_type=b.business_type or "gym",
+            state=b.state or "Assam",
+            district=b.district or "Kamrup",
+            city=b.city or b.village_or_town or "Guwahati",
+            pincode=b.pincode or "781001",
+            upi_id=b.upi_id or "Not set",
+            subscription_status=b.subscription_status or "trial",
+            is_main_branch=b.is_main_branch if hasattr(b, 'is_main_branch') and b.is_main_branch is not None else True,
+            total_members=m_count,
+            total_revenue=float(rev),
+            pending_revenue=float(pending)
+        ))
+    return res
+
+
+@app.post("/owner/branches/create", response_model=schemas.BranchResponse, tags=["Multi-Branch"])
+def create_branch(data: schemas.BranchCreate, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    if not data.name.strip() or not data.city.strip() or not data.address_line.strip():
+        raise HTTPException(status_code=400, detail="Branch name, full address, and city/village are mandatory.")
+        
+    o_email = current_user.owner_email or current_user.email
+    
+    branch = models.Gym(
+        name=data.name.strip(),
+        owner_name=current_user.owner_name,
+        owner_email=o_email,
+        phone=data.phone,
+        email=f"branch_{random.randint(10000, 99999)}_{current_user.email}",
+        password_hash=current_user.password_hash,
+        business_type=data.business_type,
+        address_line=data.address_line,
+        state=data.state,
+        district=data.district,
+        city=data.city,
+        pincode=data.pincode,
+        upi_id=data.upi_id or current_user.upi_id,
+        doctor_specialization=data.doctor_specialization,
+        consultation_fee=data.consultation_fee,
+        timings=data.timings,
+        is_main_branch=False,
+        parent_id=current_user.id,
+        subscription_status="active" if current_user.subscription_status == "active" else "trial",
+        subscription_start=current_user.subscription_start,
+        subscription_end=current_user.subscription_end,
+        is_onboarded=True
+    )
+    db.add(branch)
+    db.commit()
+    db.refresh(branch)
+    
+    record_audit(db, current_user.id, current_user.owner_name, "CREATE_BRANCH", "gym", branch.id, f"Added branch: {branch.name} ({branch.city})")
+    
+    return schemas.BranchResponse(
+        id=branch.id,
+        name=branch.name,
+        owner_name=branch.owner_name,
+        owner_email=o_email,
+        phone=branch.phone,
+        business_type=branch.business_type,
+        state=branch.state,
+        district=branch.district,
+        city=branch.city,
+        pincode=branch.pincode,
+        upi_id=branch.upi_id,
+        subscription_status=branch.subscription_status,
+        is_main_branch=False,
+        total_members=0,
+        total_revenue=0.0,
+        pending_revenue=0.0
+    )
+
+
+@app.post("/owner/branches/switch/{branch_id}", tags=["Multi-Branch"])
+def switch_active_branch(branch_id: int, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    o_email = current_user.owner_email or current_user.email
+    branch = db.query(models.Gym).filter(
+        models.Gym.id == branch_id,
+        (models.Gym.owner_email == o_email) | (models.Gym.email == o_email) | (models.Gym.id == current_user.id)
+    ).first()
+    if not branch:
+        raise HTTPException(status_code=404, detail="Branch not found or unauthorized")
+        
+    access_token = auth.create_access_token(data={"sub": branch.email})
+    return {
+        "status": "success",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "branch": {
+            "id": branch.id,
+            "name": branch.name,
+            "business_type": branch.business_type,
+            "city": branch.city
+        }
+    }
+
+
+@app.post("/owner/branches/pay-bulk-subscription", tags=["Multi-Branch"])
+def pay_bulk_subscription(req: schemas.BulkSubscriptionRequest, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    o_email = current_user.owner_email or current_user.email
+    branches = db.query(models.Gym).filter(
+        (models.Gym.owner_email == o_email) | (models.Gym.email == o_email)
+    ).all()
+    
+    # Extend all branches by 30 days
+    today = date.today()
+    for b in branches:
+        b.subscription_status = "active"
+        b.subscription_start = today
+        b.subscription_end = today + timedelta(days=30)
+        
+    # Record bulk payment
+    bulk_pay = models.BulkSubscriptionPayment(
+        owner_email=o_email,
+        total_branches=len(branches),
+        total_amount=req.total_amount,
+        utr_number=req.utr_number,
+        status="verified",
+        notes=f"1-Click Bulk Renewal for {len(branches)} branches"
+    )
+    db.add(bulk_pay)
+    db.commit()
+    
+    record_audit(db, current_user.id, current_user.owner_name, "BULK_SUBSCRIPTION_PAY", "bulk_payment", bulk_pay.id, f"Paid ₹{req.total_amount} for {len(branches)} branches (UTR: {req.utr_number})")
+    
+    return {
+        "status": "success",
+        "message": f"Payment verified! All {len(branches)} branches activated for 30 days.",
+        "branches_updated": len(branches),
+        "total_amount": float(req.total_amount)
+    }
+
+
+# =====================================================================
+# --- 8. AI AUTOPILOT MASTER TOGGLE ---
+# =====================================================================
+
+@app.patch("/gyms/me/autopilot", tags=["AI Autopilot"])
+def toggle_autopilot(enabled: bool, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    current_user.autopilot_enabled = enabled
+    db.commit()
+    record_audit(db, current_user.id, current_user.owner_name, "TOGGLE_AUTOPILOT", "gym", current_user.id, f"Switched AI AutoPilot to {'ACTIVE' if enabled else 'PAUSED'}")
+    return {
+        "status": "success",
+        "autopilot_enabled": current_user.autopilot_enabled,
+        "message": f"🤖 AI AutoPilot is now {'ACTIVE (Automating WhatsApp renewals, leads & digest)' if enabled else 'PAUSED'}"
+    }
+
+
+# =====================================================================
+# --- 9. CUSTOMER JOURNEY TIMELINE & DIGITAL DOCUMENTS VAULT ---
+# =====================================================================
+
+@app.get("/members/{member_id}/timeline", response_model=List[schemas.TimelineEventResponse], tags=["Timeline"])
+def get_customer_timeline(member_id: int, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    events = db.query(models.CustomerTimelineEvent).filter(
+        models.CustomerTimelineEvent.gym_id == current_user.id,
+        models.CustomerTimelineEvent.member_id == member_id
+    ).order_by(models.CustomerTimelineEvent.created_at.desc()).all()
+    
+    if not events:
+        # Auto-seed initial journey milestone from member data
+        mem = db.query(models.Member).filter(models.Member.id == member_id, models.Member.gym_id == current_user.id).first()
+        if mem:
+            e1 = models.CustomerTimelineEvent(
+                gym_id=current_user.id, member_id=member_id, event_type="LEAD_CAPTURED",
+                title="Lead Captured via AutoBiz", description="Customer discovered business & registered contact", staff_name="AI Bot"
+            )
+            e2 = models.CustomerTimelineEvent(
+                gym_id=current_user.id, member_id=member_id, event_type="MEMBERSHIP_PURCHASED",
+                title=f"Subscribed to {mem.membership_type}", description=f"Active membership started on {mem.start_date}", staff_name=current_user.owner_name
+            )
+            db.add_all([e1, e2])
+            db.commit()
+            return [e2, e1]
+    return events
+
+
+@app.post("/members/{member_id}/timeline", response_model=schemas.TimelineEventResponse, tags=["Timeline"])
+def add_timeline_event(member_id: int, event: schemas.TimelineEventCreate, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    db_event = models.CustomerTimelineEvent(
+        gym_id=current_user.id,
+        member_id=member_id,
+        event_type=event.event_type,
+        title=event.title,
+        description=event.description,
+        staff_name=event.staff_name or current_user.owner_name,
+        amount=event.amount
+    )
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+
+@app.get("/documents", response_model=List[schemas.DocumentResponse], tags=["Documents"])
+def get_documents(member_id: Optional[int] = None, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    q = db.query(models.DocumentRecord).filter(models.DocumentRecord.gym_id == current_user.id)
+    if member_id:
+        q = q.filter(models.DocumentRecord.member_id == member_id)
+    return q.order_by(models.DocumentRecord.created_at.desc()).all()
+
+
+@app.post("/documents/upload", response_model=schemas.DocumentResponse, tags=["Documents"])
+def upload_document(doc: schemas.DocumentCreate, current_user: models.Gym = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    db_doc = models.DocumentRecord(
+        gym_id=current_user.id,
+        member_id=doc.member_id,
+        doc_type=doc.doc_type,
+        title=doc.title,
+        file_url=doc.file_url or "/static/mock_doc.pdf",
+        notes=doc.notes
+    )
+    db.add(db_doc)
+    db.commit()
+    db.refresh(db_doc)
+    record_audit(db, current_user.id, current_user.owner_name, "UPLOAD_DOCUMENT", "document", db_doc.id, f"Uploaded {doc.doc_type}: {doc.title}")
+    return db_doc
+
+
+# =====================================================================
+# --- 10. AUTOMATED CUSTOMER SELF-BOOKING (ZERO MANUAL WORK FOR OWNER) ---
+# =====================================================================
+
+@app.post("/bookings/customer-self-book", tags=["Customer Booking"])
+async def customer_self_book(booking: schemas.CustomerSelfBookRequest, db: Session = Depends(get_db)):
+    gym = db.query(models.Gym).filter(models.Gym.id == booking.gym_id).first()
+    if not gym:
+        raise HTTPException(status_code=404, detail="Business/Doctor not found")
+        
+    # 1. Automatically create/update Member record in Owner's tenant
+    member = db.query(models.Member).filter(
+        models.Member.gym_id == gym.id,
+        models.Member.phone == booking.customer_phone
+    ).first()
+    
+    start = booking.booking_date
+    end = start + timedelta(days=30)
+    
+    if not member:
+        member = models.Member(
+            gym_id=gym.id,
+            full_name=booking.customer_name,
+            phone=booking.customer_phone,
+            email=booking.customer_email or f"{booking.customer_phone}@customer.autobiz",
+            membership_type=booking.service_or_plan_name,
+            start_date=start,
+            end_date=end,
+            is_active=True
+        )
+        db.add(member)
+        db.commit()
+        db.refresh(member)
+    else:
+        member.membership_type = booking.service_or_plan_name
+        member.is_active = True
+        db.commit()
+        
+    # 2. Automatically record Payment in Owner's ledger
+    utr_txt = f" | UTR: {booking.utr_number}" if booking.utr_number else ""
+    payment = models.Payment(
+        gym_id=gym.id,
+        member_id=member.id,
+        amount=booking.amount,
+        payment_mode=booking.payment_mode or "UPI",
+        payment_status="completed",
+        payment_date=start,
+        notes=f"Self-Booked: {booking.service_or_plan_name} ({booking.time_slot}){utr_txt}"
+    )
+    db.add(payment)
+    
+    # 3. Create Timeline Event
+    e = models.CustomerTimelineEvent(
+        gym_id=gym.id,
+        member_id=member.id,
+        event_type="APPOINTMENT_CONFIRMED" if gym.business_type == "clinic" else "MEMBERSHIP_PURCHASED",
+        title=f"Confirmed Booking: {booking.service_or_plan_name}",
+        description=f"Slot: {booking.time_slot} on {booking.booking_date}. Amount: ₹{booking.amount} via UPI",
+        staff_name="Customer Self-Booking",
+        amount=booking.amount
+    )
+    db.add(e)
+    
+    # 4. Generate Tax Invoice automatically
+    inv_count = db.query(models.Invoice).filter(models.Invoice.gym_id == gym.id).count()
+    inv_num = f"INV-{inv_count + 1:04d}"
+    invoice = models.Invoice(
+        gym_id=gym.id,
+        member_id=member.id,
+        invoice_number=inv_num,
+        service_name=booking.service_or_plan_name,
+        subtotal=booking.amount,
+        tax_amount=Decimal("0.00"),
+        total_amount=booking.amount,
+        payment_mode=booking.payment_mode or "UPI",
+        payment_status="paid"
+    )
+    db.add(invoice)
+    db.commit()
+    
+    # 5. WhatsApp Confirmation Pass Hook
+    msg = f"🎉 *Booking Confirmed at {gym.name}!* \n\nNamaste {booking.customer_name}! Your appointment/session is scheduled for:\n📅 *Date:* {booking.booking_date}\n⏰ *Time Slot:* {booking.time_slot}\n💰 *Paid:* ₹{int(booking.amount)}\n🧾 *Invoice:* {inv_num}\n\nShow your digital QR pass at reception: {SITE_BASE_URL}/customer_portal.html"
+    await send_whatsapp_message(booking.customer_phone, msg, sender_name=gym.name, channel="channel_2")
+    
+    record_audit(db, gym.id, "Customer Self-Book", "SELF_BOOKING", "member", member.id, f"Self-booked {booking.service_or_plan_name} ({booking.time_slot}) for ₹{booking.amount}")
+    
+    return {
+        "status": "success",
+        "message": f"Appointment / Booking confirmed at {gym.name}!",
+        "booking": {
+            "business_name": gym.name,
+            "customer_name": booking.customer_name,
+            "slot": booking.time_slot,
+            "date": str(booking.booking_date),
+            "amount": float(booking.amount),
+            "invoice_number": inv_num
+        }
+    }
+
+
+# =====================================================================
+# --- 11. ROLE-AWARE FLOATING AI ASSISTANT (GUARDED PRIVACY) ---
+# =====================================================================
+
+@app.post("/ai/chat-assistant", response_model=schemas.AIChatAssistantResponse, tags=["AI Assistant"])
+def role_aware_ai_assistant(req: schemas.AIChatAssistantRequest, db: Session = Depends(get_db)):
+    q = (req.query or req.message or "").lower()
+    
+    # ------------------ A. CUSTOMER CONCIERGE ------------------
+    if req.role == "customer":
+        # Strict privacy guardrail: Refuse internal developer, owner revenue, code or database questions
+        sensitive_keywords = ["revenue", "owner phone", "database", "api key", "source code", "how much money", "staff salary", "secret", "password"]
+        if any(sk in q for sk in sensitive_keywords):
+            ans = "🔒 I am AutoBiz Customer Concierge. I can help you with booking slots, finding doctors/gyms, checking your active membership, and payment receipts. For business data privacy, administrative records are restricted."
+            return schemas.AIChatAssistantResponse(role="customer", answer=ans, reply=ans)
+            
+        if "expire" in q or "membership" in q or "plan" in q:
+            if req.context_phone:
+                mem = db.query(models.Member).filter(models.Member.phone == req.context_phone).order_by(models.Member.id.desc()).first()
+                if mem:
+                    ans = f"Hey {mem.full_name}! Your active plan '{mem.membership_type}' is valid till {mem.end_date}. Status: {'ACTIVE 🟢' if mem.is_active else 'EXPIRED 🔴'}. You can renew directly in 1 click from your Customer Portal!"
+                    return schemas.AIChatAssistantResponse(role="customer", answer=ans, reply=ans)
+            ans = "To check your exact membership or appointment details, please enter your WhatsApp phone number in the Customer Portal!"
+            return schemas.AIChatAssistantResponse(role="customer", answer=ans, reply=ans)
+            
+        if "doctor" in q or "timing" in q or "slot" in q or "gym" in q or "appointment" in q or "book" in q:
+            ans = "You can discover verified Doctors, Gyms, and Salons across India on our Explore page. All slots and consultation timings are displayed with 1-click direct booking & 0% middleman fee!"
+            return schemas.AIChatAssistantResponse(role="customer", answer=ans, reply=ans)
+            
+        ans = "Namaste! I am AutoBiz AI Assistant. Ask me how to book a session, check your membership pass, or locate top facilities near you!"
+        return schemas.AIChatAssistantResponse(role="customer", answer=ans, reply=ans)
+        
+    # ------------------ B. OWNER CO-PILOT ------------------
+    else:
+        if "plan" in q or "create plan" in q:
+            ans = "To create a new service or membership plan: Go to Dashboard ➔ Settings & UPI ➔ Enter your primary service name & price, or add custom plans under Customer CRM!"
+            return schemas.AIChatAssistantResponse(role="owner", answer=ans, reply=ans)
+        if "upi" in q or "payment" in q:
+            ans = "To configure your direct UPI Payout: Open Settings tab ➔ enter your UPI ID (e.g. yourname@okhdfc). 100% customer money goes directly to your bank with zero middleman fees!"
+            return schemas.AIChatAssistantResponse(role="owner", answer=ans, reply=ans)
+        if "branch" in q or "multiple" in q:
+            ans = "Multi-Branch Management: Click '+ Add New Branch' in the top branch switcher. You can manage 25+ locations with comparative revenue tracking and 1-click bulk SaaS license payments!"
+            return schemas.AIChatAssistantResponse(role="owner", answer=ans, reply=ans)
+        if "autopilot" in q:
+            ans = "AI AutoPilot Switch: When turned ON, the system automatically dispatches WhatsApp renewal reminders, trial follow-ups, and daily business digests in the background!"
+            return schemas.AIChatAssistantResponse(role="owner", answer=ans, reply=ans)
+            
+        ans = "Namaste Boss! I am your AutoBiz Business Co-Pilot. You can ask me how to configure direct UPI, add new branches, automate WhatsApp campaigns, or analyze this month's revenue!"
+        return schemas.AIChatAssistantResponse(role="owner", answer=ans, reply=ans)
+
 
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")

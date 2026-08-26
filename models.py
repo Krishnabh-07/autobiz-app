@@ -27,7 +27,19 @@ class Gym(Base):
     subscription_status = Column(String(20), default="trial")   # trial / active / expired
     subscription_start = Column(Date, nullable=True)
     subscription_end = Column(Date, nullable=True)
-    subscription_plan = Column(String(50), default="monthly")
+    owner_email = Column(String(200), index=True, nullable=True)
+    is_main_branch = Column(Boolean, default=True)
+    parent_id = Column(Integer, ForeignKey("gyms.id"), nullable=True)
+    address_line = Column(String(300), nullable=True)
+    state = Column(String(100), default="Assam")
+    district = Column(String(100), default="Kamrup Metropolitan")
+    pincode = Column(String(10), nullable=True)
+    village_or_town = Column(String(150), nullable=True)
+    autopilot_enabled = Column(Boolean, default=True)
+    doctor_specialization = Column(String(150), nullable=True)
+    slot_duration_mins = Column(Integer, default=15)
+    consultation_fee = Column(Numeric(10, 2), default=500.00)
+    working_days = Column(String(100), default="Mon-Sat")
     is_onboarded = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())
 
@@ -41,6 +53,8 @@ class Gym(Base):
     audit_logs = relationship("AuditLog", back_populates="gym", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="gym", cascade="all, delete-orphan")
     booking_slots = relationship("BookingSlot", back_populates="gym", cascade="all, delete-orphan")
+    documents = relationship("DocumentRecord", back_populates="gym", cascade="all, delete-orphan")
+    timeline_events = relationship("CustomerTimelineEvent", back_populates="gym", cascade="all, delete-orphan")
 
 
 class Member(Base):
@@ -236,3 +250,47 @@ class BookingSlot(Base):
     created_at = Column(DateTime, default=func.now())
 
     gym = relationship("Gym", back_populates="booking_slots")
+
+
+class DocumentRecord(Base):
+    __tablename__ = "document_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    gym_id = Column(Integer, ForeignKey("gyms.id"))
+    member_id = Column(Integer, ForeignKey("members.id"), nullable=True)
+    doc_type = Column(String(50), default="Agreement") # Prescription, Medical Report, Agreement, Job Card, ID Proof
+    title = Column(String(200), nullable=False)
+    file_url = Column(String(500), nullable=True)
+    notes = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=func.now())
+
+    gym = relationship("Gym", back_populates="documents")
+
+
+class CustomerTimelineEvent(Base):
+    __tablename__ = "customer_timeline_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    gym_id = Column(Integer, ForeignKey("gyms.id"))
+    member_id = Column(Integer, ForeignKey("members.id"))
+    event_type = Column(String(50), nullable=False) # LEAD_CAPTURED, TRIAL_BOOKED, PAYMENT_RECEIVED, QR_CHECKIN, RENEWAL_DUE
+    title = Column(String(200), nullable=False)
+    description = Column(String(500), nullable=True)
+    staff_name = Column(String(100), default="AutoBiz AI")
+    amount = Column(Numeric(10, 2), nullable=True)
+    created_at = Column(DateTime, default=func.now())
+
+    gym = relationship("Gym", back_populates="timeline_events")
+
+
+class BulkSubscriptionPayment(Base):
+    __tablename__ = "bulk_subscription_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_email = Column(String(200), index=True, nullable=False)
+    total_branches = Column(Integer, default=1)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+    utr_number = Column(String(100), nullable=False)
+    status = Column(String(20), default="pending") # pending, verified, rejected
+    notes = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=func.now())

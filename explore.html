@@ -49,17 +49,14 @@
                 <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
             </div>
             <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
-        </a>
-
-        <nav class="hidden md:flex items-center gap-8 glass-card px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
-            <a href="/" class="hover:text-cyan-400 transition">Home (3D)</a>
-            <a href="/explore.html" class="text-emerald-400 font-semibold">Explore Nearby</a>
-            <a href="/dashboard.html" class="hover:text-purple-400 transition">Owner Portal</a>
+        </a>        <nav class="hidden md:flex items-center gap-8 glass-card px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
+            <a href="/" class="hover:text-cyan-400 transition">Home</a>
+            <a href="/explore.html" class="text-emerald-400 font-semibold">🔍 Explore Nearby</a>
         </nav>
 
         <div class="flex items-center gap-3" id="customerNav">
             <button onclick="openCustomerLogin()" class="glass-card px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-400 hover:text-white flex items-center gap-2 border border-emerald-500/20 hover:border-emerald-500/50 transition">
-                <i data-lucide="user-circle" class="w-5 h-5"></i> Login / Track Status
+                <i data-lucide="user-circle" class="w-5 h-5"></i> My Bookings
             </button>
         </div>
     </header>
@@ -73,31 +70,30 @@
                 <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Find Top Rated Facilities Near You
             </div>
             <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
-                Discover & Book <span class="gradient-text">Top Local Businesses</span>
+                Discover &amp; Book <span class="gradient-text">Top Local Businesses</span>
             </h1>
             <p class="text-gray-400 text-sm sm:text-base">
-                Instant 1-Click Free Trial & Appointment booking with AI-assigned time slots.
+                Book appointments, pay directly to business, get instant confirmation — Zero middleman.
             </p>
 
-            <!-- Search & City Filter Bar -->
-            <div class="glass-card p-3 rounded-2xl flex flex-col sm:flex-row gap-3 items-center border-white/10 shadow-2xl">
-                <div class="relative flex-1 w-full">
+            <!-- Cascading State → District → City Search Bar -->
+            <div class="glass-card p-3 rounded-2xl flex flex-col gap-3 border-white/10 shadow-2xl">
+                <div class="relative w-full">
                     <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-3.5"></i>
-                    <input type="text" id="searchInput" onkeyup="filterAndLoad()" placeholder="Search Gyms, Clinics, Salons or Keywords..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-black/40 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                    <input type="text" id="searchInput" onkeyup="filterAndLoad()" placeholder="Search Gyms, Clinics, Doctors, Salons..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-black/40 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
                 </div>
-
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <select id="citySelect" onchange="filterAndLoad()" class="w-full sm:w-44 px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
-                        <option value="all">📍 All Cities</option>
-                        <option value="Guwahati" selected>Guwahati</option>
-                        <option value="Delhi">Delhi / NCR</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Kolkata">Kolkata</option>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <select id="stateSelect" onchange="onStateChange()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="">📍 All States</option>
                     </select>
-
-                    <button onclick="filterAndLoad()" class="btn-gradient text-slate-950 font-bold px-6 py-3 rounded-xl text-sm shrink-0">
-                        Search
+                    <select id="districtSelect" onchange="onDistrictChange()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-gray-300 outline-none focus:border-emerald-400">
+                        <option value="">All Districts</option>
+                    </select>
+                    <select id="citySelect" onchange="filterAndLoad()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-gray-300 outline-none focus:border-emerald-400">
+                        <option value="all">All Cities</option>
+                    </select>
+                    <button onclick="filterAndLoad()" class="btn-gradient text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm">
+                        Search →
                     </button>
                 </div>
             </div>
@@ -592,8 +588,209 @@
 
         // Initial Load
         filterAndLoad();
+
+        // ─── CASCADING LOCATION LOADER ────────────────────────────
+        let locationData = {};
+        async function loadLocations() {
+            try {
+                const res = await fetch('/locations/states-and-districts');
+                if (!res.ok) return;
+                locationData = await res.json();
+                const stateEl = document.getElementById('stateSelect');
+                Object.keys(locationData).sort().forEach(state => {
+                    stateEl.innerHTML += `<option value="${state}">${state}</option>`;
+                });
+            } catch(e) { console.log('Location load error', e.message); }
+        }
+        function onStateChange() {
+            const state = document.getElementById('stateSelect').value;
+            const distEl = document.getElementById('districtSelect');
+            const cityEl = document.getElementById('citySelect');
+            distEl.innerHTML = '<option value="">All Districts</option>';
+            cityEl.innerHTML = '<option value="all">All Cities</option>';
+            if (state && locationData[state]) {
+                const districts = Object.keys(locationData[state]).sort();
+                districts.forEach(d => {
+                    distEl.innerHTML += `<option value="${d}">${d}</option>`;
+                });
+            }
+            filterAndLoad();
+        }
+        function onDistrictChange() {
+            const state = document.getElementById('stateSelect').value;
+            const district = document.getElementById('districtSelect').value;
+            const cityEl = document.getElementById('citySelect');
+            cityEl.innerHTML = '<option value="all">All Cities</option>';
+            if (state && district && locationData[state] && locationData[state][district]) {
+                locationData[state][district].sort().forEach(city => {
+                    cityEl.innerHTML += `<option value="${city}">${city}</option>`;
+                });
+            }
+            filterAndLoad();
+        }
+        loadLocations();
+
+        // ─── CUSTOMER SELF-BOOKING ───────────────────────────────
+        let selfBookGymId = null;
+        function openSelfBookModal(gymId, gymName, upiId, fee) {
+            selfBookGymId = gymId;
+            document.getElementById('sbGymName').innerText = gymName;
+            document.getElementById('sbFee').innerText = fee ? '₹' + fee : 'Free';
+            document.getElementById('sbUpiDisplay').innerText = upiId || 'Pay at venue';
+            document.getElementById('sbUpiId').value = upiId || '';
+            document.getElementById('selfBookModal').classList.remove('hidden');
+            document.getElementById('selfBookModal').classList.add('flex');
+        }
+        function closeSelfBook() {
+            document.getElementById('selfBookModal').classList.add('hidden');
+            document.getElementById('selfBookModal').classList.remove('flex');
+        }
+        async function submitSelfBook(e) {
+            e.preventDefault();
+            const btn = e.submitter;
+            btn.disabled = true;
+            btn.innerText = 'Booking...';
+            const payload = {
+                gym_id: selfBookGymId,
+                customer_name: document.getElementById('sbName').value.trim(),
+                customer_phone: document.getElementById('sbPhone').value.trim(),
+                customer_email: document.getElementById('sbEmail').value.trim(),
+                service_type: document.getElementById('sbService').value,
+                preferred_date: document.getElementById('sbDate').value,
+                preferred_time: document.getElementById('sbTime').value,
+                utr_number: document.getElementById('sbUtr').value.trim(),
+                notes: document.getElementById('sbNotes').value.trim()
+            };
+            if (!payload.customer_name || !payload.customer_phone) {
+                alert('Name and Phone are required'); btn.disabled = false; btn.innerText = 'Confirm & Book'; return;
+            }
+            try {
+                const res = await fetch('/bookings/customer-self-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    closeSelfBook();
+                    alert('✅ Booking Confirmed! ' + (d.message || 'You will receive a confirmation shortly.'));
+                    filterAndLoad();
+                } else {
+                    alert(d.detail || 'Booking failed. Please try again.');
+                    btn.disabled = false; btn.innerText = 'Confirm & Book';
+                }
+            } catch(err) {
+                alert('Connection error'); btn.disabled = false; btn.innerText = 'Confirm & Book';
+            }
+        }
+
+        // ─── CUSTOMER AI CONCIERGE ───────────────────────────────
+        async function sendCustomerAiChat() {
+            const input = document.getElementById('custAiInput');
+            const log = document.getElementById('custAiLog');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            log.innerHTML += `<div class="text-right"><span class="inline-block bg-cyan-500/20 text-cyan-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">${msg}</span></div>`;
+            log.scrollTop = log.scrollHeight;
+            try {
+                const res = await fetch('/ai/chat-assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, role: 'customer' })
+                });
+                const d = await res.json();
+                const reply = d.reply || 'Sorry, I could not process that.';
+                log.innerHTML += `<div class="text-left"><span class="inline-block bg-white/10 text-gray-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">🤖 ${reply}</span></div>`;
+                log.scrollTop = log.scrollHeight;
+            } catch(e) {
+                log.innerHTML += `<div class="text-xs text-red-400 pl-1">Error: ${e.message}</div>`;
+            }
+        }
     </script>
+
 <script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
 <div id="pwaInstallBtn" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;background:linear-gradient(135deg,#00f5a0,#00d9f5);color:#000;font-weight:700;padding:12px 20px;border-radius:50px;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,245,160,0.4);font-size:14px;" onclick="installPWA()">📱 Install App</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: CUSTOMER SELF-BOOKING + DIRECT UPI PAYMENT
+════════════════════════════════════════════════════════ -->
+<div id="selfBookModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card p-6 rounded-3xl border border-cyan-500/30 space-y-4 max-h-[92vh] overflow-y-auto">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">Zero-Friction Booking</span>
+                <h3 class="font-extrabold text-white text-base" id="sbGymName">Book Appointment</h3>
+            </div>
+            <button onclick="closeSelfBook()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-center text-xs">
+            <div class="p-2.5 bg-black/40 rounded-xl">
+                <span class="text-gray-400 block text-[10px]">Consultation Fee</span>
+                <b class="text-emerald-400" id="sbFee">Free</b>
+            </div>
+            <div class="p-2.5 bg-black/40 rounded-xl">
+                <span class="text-gray-400 block text-[10px]">Pay to UPI</span>
+                <b class="text-cyan-300 font-mono text-[10px]" id="sbUpiDisplay">—</b>
+            </div>
+        </div>
+
+        <form onsubmit="submitSelfBook(event)" class="space-y-3">
+            <input type="hidden" id="sbUpiId" value="">
+            <input type="text" id="sbName" required placeholder="Your Full Name *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <input type="tel" id="sbPhone" required placeholder="WhatsApp Phone Number *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <input type="email" id="sbEmail" placeholder="Email (Optional)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+            <select id="sbService" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white outline-none">
+                <option value="consultation">Consultation / Trial Visit</option>
+                <option value="membership">Membership Enrollment</option>
+                <option value="appointment">Regular Appointment</option>
+                <option value="checkup">Health Checkup</option>
+            </select>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] text-gray-400 mb-1">Preferred Date</label>
+                    <input type="date" id="sbDate" class="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-gray-400 mb-1">Preferred Time</label>
+                    <input type="time" id="sbTime" class="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] text-gray-400 mb-1">UTR / Transaction ID (after UPI payment)</label>
+                <input type="text" id="sbUtr" placeholder="Enter UTR after paying the fee" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-emerald-500/30 text-xs text-emerald-300 font-mono outline-none">
+            </div>
+            <input type="text" id="sbNotes" placeholder="Any special notes / symptoms (optional)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+            <button type="submit" class="btn-gradient w-full py-3 rounded-xl text-slate-950 font-bold text-sm">
+                ✅ Confirm &amp; Book — Auto Added to Business Dashboard
+            </button>
+            <p class="text-[10px] text-gray-500 text-center">Your booking is automatically added to the business's dashboard. No manual entry needed.</p>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOATING CUSTOMER AI CONCIERGE WIDGET
+════════════════════════════════════════════════════════ -->
+<div id="custAiWidget" class="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-2">
+    <div id="custAiPanel" class="hidden w-72 glass-card rounded-2xl border border-cyan-500/30 shadow-2xl overflow-hidden" style="background:rgba(6,8,19,0.95)">
+        <div class="px-4 py-3 bg-black/40 border-b border-white/10 flex justify-between items-center">
+            <span class="text-xs font-extrabold text-white">💬 AutoBiz AI Concierge</span>
+            <button onclick="document.getElementById('custAiPanel').classList.add('hidden')" class="text-gray-400 hover:text-white text-xs">✕</button>
+        </div>
+        <div id="custAiLog" class="h-48 overflow-y-auto p-3 space-y-2 text-xs">
+            <div class="text-left"><span class="inline-block bg-white/10 text-gray-200 px-3 py-1.5 rounded-xl text-xs">🤖 Namaste! I can help you find gyms, clinics, salons nearby. What are you looking for?</span></div>
+        </div>
+        <div class="px-3 py-3 border-t border-white/10 flex gap-2">
+            <input type="text" id="custAiInput" onkeypress="if(event.key==='Enter') sendCustomerAiChat()" placeholder="Ask anything..." class="flex-1 px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <button onclick="sendCustomerAiChat()" class="btn-gradient px-3 py-2 rounded-xl text-slate-950 font-bold text-xs">Ask</button>
+        </div>
+    </div>
+    <button onclick="document.getElementById('custAiPanel').classList.toggle('hidden')" class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/30 text-xl hover:scale-110 transition-transform" title="Ask AutoBiz Concierge">
+        💬
+    </button>
+</div>
+
 </body>
 </html>
