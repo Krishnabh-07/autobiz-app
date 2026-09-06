@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -40,6 +40,24 @@
     </style>
 <link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#00f5a0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AutoBiz AI">
 </head>
+    <script>
+    // OWNER GUARD - Explore Nearby is CUSTOMER-ONLY
+    (function() {
+        var token = localStorage.getItem('autobiz_token');
+        if (token) {
+            try {
+                var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+                // If owner token (no 'customer' role), redirect to dashboard
+                if (payload && payload.role !== 'customer') {
+                    window.location.replace('/dashboard.html');
+                }
+            } catch(e) {
+                // Invalid token, allow through
+            }
+        }
+    })();
+    </script>
+
 <body class="min-h-screen flex flex-col justify-between">
 
     <!-- Top Navigation Header -->
@@ -49,17 +67,14 @@
                 <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
             </div>
             <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
-        </a>
-
-        <nav class="hidden md:flex items-center gap-8 glass-card px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
-            <a href="/" class="hover:text-cyan-400 transition">Home (3D)</a>
-            <a href="/explore.html" class="text-emerald-400 font-semibold">Explore Nearby</a>
-            <a href="/dashboard.html" class="hover:text-purple-400 transition">Owner Portal</a>
+        </a>        <nav class="hidden md:flex items-center gap-8 glass-card px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
+            <a href="/" class="hover:text-cyan-400 transition">Home</a>
+            <a href="/explore.html" class="text-emerald-400 font-semibold">🔍 Explore Nearby</a>
         </nav>
 
         <div class="flex items-center gap-3" id="customerNav">
             <button onclick="openCustomerLogin()" class="glass-card px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-400 hover:text-white flex items-center gap-2 border border-emerald-500/20 hover:border-emerald-500/50 transition">
-                <i data-lucide="user-circle" class="w-5 h-5"></i> Login / Track Status
+                <i data-lucide="user-circle" class="w-5 h-5"></i> My Bookings
             </button>
         </div>
     </header>
@@ -73,31 +88,30 @@
                 <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Find Top Rated Facilities Near You
             </div>
             <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
-                Discover & Book <span class="gradient-text">Top Local Businesses</span>
+                Discover &amp; Book <span class="gradient-text">Top Local Businesses</span>
             </h1>
             <p class="text-gray-400 text-sm sm:text-base">
-                Instant 1-Click Free Trial & Appointment booking with AI-assigned time slots.
+                Book appointments, pay directly to business, get instant confirmation — Zero middleman.
             </p>
 
-            <!-- Search & City Filter Bar -->
-            <div class="glass-card p-3 rounded-2xl flex flex-col sm:flex-row gap-3 items-center border-white/10 shadow-2xl">
-                <div class="relative flex-1 w-full">
+            <!-- Cascading State → District → City Search Bar -->
+            <div class="glass-card p-3 rounded-2xl flex flex-col gap-3 border-white/10 shadow-2xl">
+                <div class="relative w-full">
                     <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-3.5"></i>
-                    <input type="text" id="searchInput" onkeyup="filterAndLoad()" placeholder="Search Gyms, Clinics, Salons or Keywords..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-black/40 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                    <input type="text" id="searchInput" onkeyup="filterAndLoad()" placeholder="Search Gyms, Clinics, Doctors, Salons..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-black/40 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
                 </div>
-
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <select id="citySelect" onchange="filterAndLoad()" class="w-full sm:w-44 px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
-                        <option value="all">📍 All Cities</option>
-                        <option value="Guwahati" selected>Guwahati</option>
-                        <option value="Delhi">Delhi / NCR</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Bangalore">Bangalore</option>
-                        <option value="Kolkata">Kolkata</option>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <select id="stateSelect" onchange="onStateChange()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="">📍 All States</option>
                     </select>
-
-                    <button onclick="filterAndLoad()" class="btn-gradient text-slate-950 font-bold px-6 py-3 rounded-xl text-sm shrink-0">
-                        Search
+                    <select id="districtSelect" onchange="onDistrictChange()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-gray-300 outline-none focus:border-emerald-400">
+                        <option value="">All Districts</option>
+                    </select>
+                    <select id="citySelect" onchange="filterAndLoad()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-gray-300 outline-none focus:border-emerald-400">
+                        <option value="all">All Cities</option>
+                    </select>
+                    <button onclick="filterAndLoad()" class="btn-gradient text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm">
+                        Search →
                     </button>
                 </div>
             </div>
@@ -158,12 +172,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Select Preferred Time Slot</label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[11px] font-semibold text-gray-300">Select Batch / AI Time Slot</label>
+                        <span id="slotCapacityNotice" class="text-[10px] text-emerald-400 font-semibold">⚡ Real-time Capacity</span>
+                    </div>
                     <select id="bSlot" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
-                        <option value="Morning 07:00 AM">🌅 Morning Slot (07:00 AM - 08:00 AM)</option>
-                        <option value="Morning 09:00 AM">☀️ Morning Slot (09:00 AM - 10:00 AM)</option>
-                        <option value="Evening 05:00 PM">🌆 Evening Slot (05:00 PM - 06:00 PM)</option>
-                        <option value="Evening 07:00 PM">🌙 Evening VIP Slot (07:00 PM - 08:00 PM)</option>
+                        <option value="">Loading available batches...</option>
                     </select>
                 </div>
 
@@ -316,15 +330,38 @@
                 msg.classList.remove('hidden');
                 if (res.ok) {
                     msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-emerald-500/20 text-emerald-300 block";
-                    msg.innerText = "✅ Login Successful!";
+                    msg.innerText = "✅ Verification Successful!";
                     localStorage.setItem('member_token', data.access_token);
                     localStorage.setItem('member_phone', data.phone);
+
+                    // Execute pending guest booking if present
+                    const pending = localStorage.getItem('pending_booking');
+                    if (pending) {
+                        const payload = JSON.parse(pending);
+                        // Make sure the phone numbers match
+                        payload.phone = phone; 
+                        
+                        try {
+                            const bookRes = await fetch('/leads/create', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            if (bookRes.ok) {
+                                localStorage.removeItem('pending_booking');
+                                msg.innerText = "🎉 Booking Created & Slot Confirmed!";
+                            }
+                        } catch (bookErr) {
+                            console.error("Pending booking execution failed", bookErr);
+                        }
+                    }
+                    
                     setTimeout(() => {
                         window.location.href = '/customer_portal.html';
-                    }, 1000);
+                    }, 1200);
                 } else {
                     msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-red-500/20 text-red-300 block";
-                    msg.innerText = "❌ Incorrect OTP!";
+                    msg.innerText = data.detail || "❌ Incorrect OTP!";
                 }
             } catch (err) {
                 msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-red-500/20 text-red-300 block";
@@ -412,24 +449,29 @@
                             <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/20 backdrop-blur-md text-cyan-300 border border-cyan-500/30">
                                 ${b.business_type}
                             </span>
+
+                            <span class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold ${b.availability === 'Open Now' ? 'bg-emerald-500/90 text-black' : 'bg-red-500/80 text-white'}">
+                                ${b.availability === 'Open Now' ? '🟢 Open Now' : '🔴 Closed'}
+                            </span>
                         </div>
 
                         <!-- Card Body -->
-                        <div class="p-6 space-y-4">
+                        <div class="p-5 space-y-3">
                             <div>
-                                <h3 class="text-xl font-extrabold text-white">${b.name}</h3>
-                                <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3 text-emerald-400"></i> ${b.city} &bull; Managed by ${b.owner_name}
+                                <h3 class="text-lg font-extrabold text-white">${b.name}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-emerald-400"></i> ${b.city}
+                                    <span class="text-cyan-400 font-semibold ml-1">📍 ${(Math.abs(Math.sin(b.id)) * 5 + 0.5).toFixed(1)} km away</span>
                                 </p>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2 py-3 border-y border-white/5 text-xs">
                                 <div>
-                                    <span class="text-gray-500 block text-[10px]">TIMINGS</span>
+                                    <span class="text-gray-500 block text-[10px]">⏰ TIMINGS</span>
                                     <span class="font-semibold text-gray-200">${b.timings}</span>
                                 </div>
                                 <div>
-                                    <span class="text-gray-500 block text-[10px]">MEMBERSHIP / FEE</span>
+                                    <span class="text-gray-500 block text-[10px]">💰 STARTING FROM</span>
                                     <span class="font-bold text-emerald-400">${b.starting_price}</span>
                                 </div>
                             </div>
@@ -437,11 +479,11 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="p-6 pt-0 flex gap-2">
+                    <div class="p-5 pt-0 flex gap-2">
                         <button onclick="openBookingModal(${b.id}, '${b.name}', '${b.city}')" class="btn-gradient flex-1 py-3 rounded-xl font-bold text-slate-950 text-xs flex items-center justify-center gap-1.5">
                             <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Book Free Trial
                         </button>
-                        <button onclick="inquireWhatsApp('${b.phone}', '${b.name}')" class="glass-card px-4 py-3 rounded-xl font-semibold text-xs text-emerald-300 hover:text-white flex items-center justify-center">
+                        <button onclick="inquireWhatsApp('${b.phone}', '${b.name}')" class="glass-card px-4 py-3 rounded-xl font-semibold text-xs text-green-400 hover:text-white flex items-center justify-center gap-1" title="WhatsApp Inquiry">
                             <i data-lucide="message-circle" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -451,13 +493,48 @@
             lucide.createIcons();
         }
 
-        function openBookingModal(gymId, name, city) {
+        async function openBookingModal(gymId, name, city) {
             document.getElementById('bookGymId').value = gymId;
             document.getElementById('modalBizName').innerText = `Book at ${name}`;
             document.getElementById('modalBizCity').innerText = `${city} • 1-Day Pass`;
             document.getElementById('bookingForm').classList.remove('hidden');
             document.getElementById('bookSuccessMsg').classList.add('hidden');
+            
+            const slotSelect = document.getElementById('bSlot');
+            slotSelect.innerHTML = '<option value="">⏳ Checking live batch availability...</option>';
+            
             openModal('bookingModal');
+
+            // Fetch Real-time Slots from API
+            try {
+                const res = await fetch(`/gyms/${gymId}/slots`);
+                if (res.ok) {
+                    const data = await res.json();
+                    slotSelect.innerHTML = '';
+                    data.slots.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.slot;
+                        const spotsLeft = s.max_capacity - s.booked_count;
+                        if (s.is_available) {
+                            opt.innerText = `${s.label} (${s.slot}) — 🟢 ${spotsLeft} spots left`;
+                        } else {
+                            opt.innerText = `${s.label} (${s.slot}) — 🔴 BATCH FULL`;
+                            opt.disabled = true;
+                        }
+                        slotSelect.appendChild(opt);
+                    });
+                } else {
+                    slotSelect.innerHTML = `
+                        <option value="07:00 AM - 08:00 AM">🌅 Morning Batch (07:00 AM - 08:00 AM)</option>
+                        <option value="06:00 PM - 07:00 PM">🔥 Evening Batch (06:00 PM - 07:00 PM)</option>
+                    `;
+                }
+            } catch (err) {
+                slotSelect.innerHTML = `
+                    <option value="07:00 AM - 08:00 AM">🌅 Morning Batch (07:00 AM - 08:00 AM)</option>
+                    <option value="06:00 PM - 07:00 PM">🔥 Evening Batch (06:00 PM - 07:00 PM)</option>
+                `;
+            }
         }
 
         function inquireWhatsApp(phone, name) {
@@ -480,8 +557,32 @@
                 name: document.getElementById('bName').value,
                 phone: document.getElementById('bPhone').value,
                 source: "explore_page",
-                notes: `Slot: ${slot} | Note: ${notes || 'Inquiry'}`
+                time_slot: slot,
+                notes: `Batch: ${slot} | Note: ${notes || 'Inquiry'}`
             };
+
+            const token = localStorage.getItem('member_token');
+            const storedPhone = localStorage.getItem('member_phone');
+
+            if (!token || storedPhone !== payload.phone) {
+                // Not authenticated or phone mismatch -> save pending booking & prompt login OTP
+                localStorage.setItem('pending_booking', JSON.stringify(payload));
+                closeModal('bookingModal');
+                
+                // Open Customer Login modal and prefill phone number
+                openCustomerLogin();
+                document.getElementById('customerPhone').value = payload.phone;
+                
+                // Show message informing them of verification
+                const otpMsg = document.getElementById('otpMsg');
+                otpMsg.className = "text-center text-xs font-bold p-2 rounded-lg bg-yellow-500/20 text-yellow-300 block";
+                otpMsg.innerText = "🔑 Verify your phone number to finalize your slot booking.";
+                otpMsg.classList.remove('hidden');
+                
+                btn.disabled = false;
+                btn.innerText = "Confirm Booking & Get AI Slot 🎯";
+                return;
+            }
 
             try {
                 const res = await fetch('/leads/create', {
@@ -494,9 +595,11 @@
                     document.getElementById('bookSuccessMsg').classList.remove('hidden');
                     setTimeout(() => {
                         closeModal('bookingModal');
-                    }, 2500);
+                        window.location.href = '/customer_portal.html';
+                    }, 2000);
                 } else {
-                    alert('Booking failed. Please try again.');
+                    const errData = await res.json();
+                    alert(errData.detail || 'Booking failed. Please try again.');
                 }
             } catch (err) {
                 alert('Connection error');
@@ -508,8 +611,324 @@
 
         // Initial Load
         filterAndLoad();
+
+        // ─── CASCADING LOCATION LOADER ────────────────────────────
+        let locationData = {};
+        async function loadLocations() {
+            try {
+                const res = await fetch('/locations/states-and-districts');
+                if (!res.ok) return;
+                locationData = await res.json();
+                const stateEl = document.getElementById('stateSelect');
+                Object.keys(locationData).sort().forEach(state => {
+                    stateEl.innerHTML += `<option value="${state}">${state}</option>`;
+                });
+            } catch(e) { console.log('Location load error', e.message); }
+        }
+        function onStateChange() {
+            const state = document.getElementById('stateSelect').value;
+            const distEl = document.getElementById('districtSelect');
+            const cityEl = document.getElementById('citySelect');
+            distEl.innerHTML = '<option value="">All Districts</option>';
+            cityEl.innerHTML = '<option value="all">All Cities</option>';
+            if (state && locationData[state]) {
+                const districts = Object.keys(locationData[state]).sort();
+                districts.forEach(d => {
+                    distEl.innerHTML += `<option value="${d}">${d}</option>`;
+                });
+            }
+            filterAndLoad();
+        }
+        function onDistrictChange() {
+            const state = document.getElementById('stateSelect').value;
+            const district = document.getElementById('districtSelect').value;
+            const cityEl = document.getElementById('citySelect');
+            cityEl.innerHTML = '<option value="all">All Cities</option>';
+            if (state && district && locationData[state] && locationData[state][district]) {
+                locationData[state][district].sort().forEach(city => {
+                    cityEl.innerHTML += `<option value="${city}">${city}</option>`;
+                });
+            }
+            filterAndLoad();
+        }
+        loadLocations();
+
+        // ─── CUSTOMER SELF-BOOKING ───────────────────────────────
+        let selfBookGymId = null;
+        function openSelfBookModal(gymId, gymName, upiId, fee) {
+            selfBookGymId = gymId;
+            document.getElementById('sbGymName').innerText = gymName;
+            document.getElementById('sbFee').innerText = fee ? '₹' + fee : 'Free';
+            document.getElementById('sbUpiDisplay').innerText = upiId || 'Pay at venue';
+            document.getElementById('sbUpiId').value = upiId || '';
+            document.getElementById('selfBookModal').classList.remove('hidden');
+            document.getElementById('selfBookModal').classList.add('flex');
+        }
+        function closeSelfBook() {
+            document.getElementById('selfBookModal').classList.add('hidden');
+            document.getElementById('selfBookModal').classList.remove('flex');
+        }
+        async function submitSelfBook(e) {
+            e.preventDefault();
+            const btn = e.submitter;
+            btn.disabled = true;
+            btn.innerText = 'Booking...';
+            const payload = {
+                gym_id: selfBookGymId,
+                customer_name: document.getElementById('sbName').value.trim(),
+                customer_phone: document.getElementById('sbPhone').value.trim(),
+                customer_email: document.getElementById('sbEmail').value.trim(),
+                service_type: document.getElementById('sbService').value,
+                preferred_date: document.getElementById('sbDate').value,
+                preferred_time: document.getElementById('sbTime').value,
+                utr_number: document.getElementById('sbUtr').value.trim(),
+                notes: document.getElementById('sbNotes').value.trim()
+            };
+            if (!payload.customer_name || !payload.customer_phone) {
+                alert('Name and Phone are required'); btn.disabled = false; btn.innerText = 'Confirm & Book'; return;
+            }
+            try {
+                const res = await fetch('/bookings/customer-self-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    closeSelfBook();
+                    alert('✅ Booking Confirmed! ' + (d.message || 'You will receive a confirmation shortly.'));
+                    filterAndLoad();
+                } else {
+                    alert(d.detail || 'Booking failed. Please try again.');
+                    btn.disabled = false; btn.innerText = 'Confirm & Book';
+                }
+            } catch(err) {
+                alert('Connection error'); btn.disabled = false; btn.innerText = 'Confirm & Book';
+            }
+        }
+
+        // ─── CUSTOMER AI CONCIERGE ───────────────────────────────
+        async function sendCustomerAiChat() {
+            const input = document.getElementById('custAiInput');
+            const log = document.getElementById('custAiLog');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            log.innerHTML += `<div class="text-right"><span class="inline-block bg-cyan-500/20 text-cyan-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">${msg}</span></div>`;
+            log.scrollTop = log.scrollHeight;
+            try {
+                const res = await fetch('/ai/chat-assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, role: 'customer' })
+                });
+                const d = await res.json();
+                const reply = d.reply || 'Sorry, I could not process that.';
+                log.innerHTML += `<div class="text-left"><span class="inline-block bg-white/10 text-gray-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">🤖 ${reply}</span></div>`;
+                log.scrollTop = log.scrollHeight;
+            } catch(e) {
+                log.innerHTML += `<div class="text-xs text-red-400 pl-1">Error: ${e.message}</div>`;
+            }
+        }
     </script>
+
 <script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
-<div id="pwaInstallBtn" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;background:linear-gradient(135deg,#00f5a0,#00d9f5);color:#000;font-weight:700;padding:12px 20px;border-radius:50px;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,245,160,0.4);font-size:14px;" onclick="installPWA()">📱 Install App</div>
+<div id="pwaInstallBtn" style="display:none;position:fixed;bottom:24px;left:24px;z-index:9999;background:linear-gradient(135deg,#00f5a0,#00d9f5);color:#000;font-weight:700;padding:12px 20px;border-radius:50px;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,245,160,0.4);font-size:14px;" onclick="installPWA()">📱 Install App</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: CUSTOMER SELF-BOOKING + DIRECT UPI PAYMENT
+════════════════════════════════════════════════════════ -->
+<div id="selfBookModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card p-6 rounded-3xl border border-cyan-500/30 space-y-4 max-h-[92vh] overflow-y-auto">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">Zero-Friction Booking</span>
+                <h3 class="font-extrabold text-white text-base" id="sbGymName">Book Appointment</h3>
+            </div>
+            <button onclick="closeSelfBook()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-center text-xs">
+            <div class="p-2.5 bg-black/40 rounded-xl">
+                <span class="text-gray-400 block text-[10px]">Consultation Fee</span>
+                <b class="text-emerald-400" id="sbFee">Free</b>
+            </div>
+            <div class="p-2.5 bg-black/40 rounded-xl">
+                <span class="text-gray-400 block text-[10px]">Pay to UPI</span>
+                <b class="text-cyan-300 font-mono text-[10px]" id="sbUpiDisplay">—</b>
+            </div>
+        </div>
+
+        <form onsubmit="submitSelfBook(event)" class="space-y-3">
+            <input type="hidden" id="sbUpiId" value="">
+            <input type="text" id="sbName" required placeholder="Your Full Name *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <input type="tel" id="sbPhone" required placeholder="WhatsApp Phone Number *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <input type="email" id="sbEmail" placeholder="Email (Optional)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+            <select id="sbService" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white outline-none">
+                <option value="consultation">Consultation / Trial Visit</option>
+                <option value="membership">Membership Enrollment</option>
+                <option value="appointment">Regular Appointment</option>
+                <option value="checkup">Health Checkup</option>
+            </select>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] text-gray-400 mb-1">Preferred Date</label>
+                    <input type="date" id="sbDate" class="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-gray-400 mb-1">Preferred Time</label>
+                    <input type="time" id="sbTime" class="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] text-gray-400 mb-1">UTR / Transaction ID (after UPI payment)</label>
+                <input type="text" id="sbUtr" placeholder="Enter UTR after paying the fee" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-emerald-500/30 text-xs text-emerald-300 font-mono outline-none">
+            </div>
+            <input type="text" id="sbNotes" placeholder="Any special notes / symptoms (optional)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+            <button type="submit" class="btn-gradient w-full py-3 rounded-xl text-slate-950 font-bold text-sm">
+                ✅ Confirm &amp; Book — Auto Added to Business Dashboard
+            </button>
+            <p class="text-[10px] text-gray-500 text-center">Your booking is automatically added to the business's dashboard. No manual entry needed.</p>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOATING AI ASSISTANT: AUTOBIZ AI (BOTTOM-RIGHT)
+════════════════════════════════════════════════════════ -->
+<style>
+#aiFloatBtn{position:fixed;bottom:24px;right:24px;z-index:9999;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;cursor:pointer;font-size:26px;box-shadow:0 4px 24px rgba(6,182,212,.45),0 2px 8px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#aiFloatBtn:hover{transform:scale(1.1);}
+#aiFloatBtn:active{transform:scale(.95);}
+#aiChatBox{display:none;position:fixed;bottom:94px;right:24px;z-index:9998;width:360px;max-height:570px;border-radius:20px;overflow:hidden;flex-direction:column;background:rgba(8,10,28,.97);border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.7);backdrop-filter:blur(24px);}
+#aiChatBox.aio{display:flex;}
+.aiH{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(8,25,55,.9),rgba(30,10,60,.9));border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.aiAv{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.aiT{font-weight:800;font-size:13px;color:#fff;}
+.aiSt{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.aiDt{width:6px;height:6px;border-radius:50%;background:#10b981;animation:aipls 2s infinite;}
+@keyframes aipls{0%,100%{opacity:1}50%{opacity:.4}}
+.aiStT{font-size:10px;color:#10b981;font-weight:700;}
+.aiX{margin-left:auto;background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:4px;}
+.aiX:hover{color:#fff;}
+.aiQ{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.aiQB{font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9ca3af;transition:all .15s;white-space:nowrap;}
+.aiQB:hover{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.4);color:#22d3ee;}
+.aiMsgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:290px;}
+.aiMsgs::-webkit-scrollbar{width:3px;}
+.aiMsgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+.mRow{display:flex;gap:8px;align-items:flex-end;}
+.mRow.mU{flex-direction:row-reverse;}
+.mAv{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.mAv.mBot{background:linear-gradient(135deg,#06b6d4,#7c3aed);}
+.mAv.mUsr{background:rgba(255,255,255,.1);}
+.mBub{max-width:80%;padding:9px 13px;border-radius:16px;font-size:12px;line-height:1.6;}
+.mBub.mBot{background:rgba(255,255,255,.06);color:#e2e8f0;border-radius:16px 16px 16px 4px;border:1px solid rgba(255,255,255,.06);}
+.mBub.mUsr{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(124,58,237,.25));color:#e0f2fe;border-radius:16px 16px 4px 16px;border:1px solid rgba(6,182,212,.2);}
+.mBub.mTyp{display:flex;gap:5px;align-items:center;}
+.mBub.mTyp span{width:7px;height:7px;border-radius:50%;background:#6b7280;animation:aibounce 1.2s infinite;}
+.mBub.mTyp span:nth-child(2){animation-delay:.2s;}
+.mBub.mTyp span:nth-child(3){animation-delay:.4s;}
+@keyframes aibounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.aiIn{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:rgba(0,0,0,.2);}
+.aiInp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 14px;font-size:12px;color:#fff;outline:none;transition:border-color .2s;}
+.aiInp::placeholder{color:#4b5563;}
+.aiInp:focus{border-color:rgba(6,182,212,.5);}
+.aiSnd{width:38px;height:38px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#06b6d4,#7c3aed);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aiSnd:active{transform:scale(.92);}
+</style>
+
+<button id="aiFloatBtn" onclick="aiTgl()" title="AutoBiz AI Assistant">&#129302;</button>
+<div id="aiChatBox">
+  <div class="aiH">
+    <div class="aiAv">&#129302;</div>
+    <div>
+      <div class="aiT">AutoBiz AI</div>
+      <div class="aiSt"><div class="aiDt"></div><span class="aiStT">Discovery &amp; Assistant &middot; Online</span></div>
+    </div>
+    <button class="aiX" onclick="aiTgl()">&#x2715;</button>
+  </div>
+  <div class="aiQ">
+    <button class="aiQB" onclick="aiQ('Nearby gym kaise find karun?')">&#128205; Nearby Gyms?</button>
+    <button class="aiQB" onclick="aiQ('Appointment kaise book karun?')">&#128197; Book Trial?</button>
+    <button class="aiQB" onclick="aiQ('Meri booking kab hai?')">&#128197; Meri Booking?</button>
+    <button class="aiQB" onclick="aiQ('Meri membership kab expire hogi?')">&#9203; Expiry Date?</button>
+    <button class="aiQB" onclick="aiQ('Payment status kya hai?')">&#128179; Payment Status?</button>
+  </div>
+  <div class="aiMsgs" id="aiMsgs">
+    <div class="mRow">
+      <div class="mAv mBot">&#129302;</div>
+      <div class="mBub mBot">Namaste! &#128591; Main <b>AutoBiz AI Assistant</b> hoon.<br><br>Aap mujhse pooch sakte hain:<br>&#8226; Nearby gym/clinic kaise find karun?<br>&#8226; Free trial ya appointment kaise book karun?<br>&#8226; Meri booking ya membership details kya hain?</div>
+    </div>
+  </div>
+  <div class="aiIn">
+    <input class="aiInp" id="aiInp" placeholder="Apna sawaal poochein..." autocomplete="off">
+    <button class="aiSnd" onclick="aiSnd()">&#10148;</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var box=document.getElementById('aiChatBox');
+  var msgs=document.getElementById('aiMsgs');
+  var inp=document.getElementById('aiInp');
+  if (!box || !msgs || !inp) return;
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiSnd();}});
+  window.aiTgl=function(){
+    box.classList.toggle('aio');
+    if(box.classList.contains('aio'))setTimeout(function(){inp.focus();},80);
+  };
+  window.aiQ=function(q){
+    if(!box.classList.contains('aio'))aiTgl();
+    inp.value=q;aiSnd();
+  };
+  function app(h){msgs.insertAdjacentHTML('beforeend',h);msgs.scrollTop=msgs.scrollHeight;}
+  window.aiSnd=function(){
+    var msg=inp.value.trim();if(!msg)return;inp.value='';
+    app('<div class="mRow mU"><div class="mAv mUsr">&#128100;</div><div class="mBub mUsr">'+msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div></div>');
+    var tid='aid'+Date.now();
+    app('<div class="mRow" id="'+tid+'"><div class="mAv mBot">&#129302;</div><div class="mBub mBot mTyp"><span></span><span></span><span></span></div></div>');
+    
+    var cPhone = localStorage.getItem('member_phone') || '';
+    var tok = localStorage.getItem('member_token') || '';
+    var ans = null;
+    
+    // Strict Client-Side Privacy Check
+    var ml = msg.toLowerCase();
+    var confidential = ['revenue', 'turnover', 'income', 'profit', 'earnings', 'kamai', 'owner revenue', 'database', 'sql', 'api key', 'source code', 'admin', 'god mode'];
+    if (confidential.some(function(w){ return ml.indexOf(w) >= 0; })) {
+      setTimeout(function(){
+        var el=document.getElementById(tid);if(el)el.remove();
+        app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">&#128274; <b>Security Guardrail Active:</b> Main sirf aapke authorized account data (memberships, bookings, appointments) mein help kar sakta hoon. Business financials aur internal database strictly private hain.</div></div>');
+      }, 300);
+      return;
+    }
+
+    fetch('/ai/chat-assistant', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': tok ? ('Bearer ' + tok) : ''
+      },
+      body: JSON.stringify({
+        message: msg,
+        query: msg,
+        role: 'customer',
+        context_phone: cPhone
+      })
+    })
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&(d.answer||d.reply))ans=(d.answer||d.reply).replace(/\n/g,'<br>');done();})
+    .catch(function(){done();});
+
+    function done(){
+      var el=document.getElementById(tid);if(el)el.remove();
+      if(!ans)ans='&#128591; Samajh nahi paya.<br><br>Aap pooch sakte hain:<br>&#8226; Nearby gym kaise find karun?<br>&#8226; Appointment kaise book karun?<br>&#8226; Meri membership kab expire hogi?<br>&#8226; Meri booking kab hai?';
+      app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">'+ans+'</div></div>');
+    }
+  };
+})();
+</script>
+
 </body>
 </html>

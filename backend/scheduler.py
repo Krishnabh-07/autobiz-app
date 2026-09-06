@@ -5,6 +5,13 @@ Channel 1: Krishnabh -> Owner (Subscription Expiry & Defaulter alerts)
 Channel 2: Gym Owner -> Member / Lead (3-day expiry & Post-trial follow-up)
 """
 
+import os
+import sys
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
+
 import asyncio
 from datetime import date, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler

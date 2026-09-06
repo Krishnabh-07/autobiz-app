@@ -11,3 +11,4 @@ requests==2.34.2
 APScheduler==3.11.3
 google-genai==2.19.0
 psycopg2-binary==2.9.12
+razorpay==1.4.1

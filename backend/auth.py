@@ -1,4 +1,11 @@
-﻿from datetime import datetime, timedelta
+import os
+import sys
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
+
+from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
@@ -8,9 +15,9 @@ from sqlalchemy.orm import Session
 import models
 from database import get_db
 
-SECRET_KEY = "supersecret_aigym_saas_jwt_key_change_in_production"
+SECRET_KEY = os.environ.get("SECRET_KEY", "supersecret_aigym_saas_jwt_key_change_in_production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 Days token validity
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 30  # 30 Days persistent session
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -58,6 +65,39 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     
     gym = db.query(models.Gym).filter(models.Gym.email == email).first()
+    if gym is None:
+        raise credentials_exception
+    return gym
+
+
+def get_current_owner(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """
+    Strict owner-only dependency.
+    Rejects customer JWT tokens (role='customer') with 403 Forbidden.
+    Only allows Gym/business owner tokens.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    forbidden_exception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Access denied. This section is for Business Owners only. Customers please use the Customer Portal.",
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        sub: str = payload.get("sub")
+        role: str = payload.get("role", "owner")
+        if sub is None:
+            raise credentials_exception
+        # Block customer tokens from accessing owner APIs
+        if role == "customer":
+            raise forbidden_exception
+    except JWTError:
+        raise credentials_exception
+    
+    gym = db.query(models.Gym).filter(models.Gym.email == sub).first()
     if gym is None:
         raise credentials_exception
     return gym

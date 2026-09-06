@@ -60,8 +60,11 @@
                 <button onclick="showSection('overview')" id="btn-overview" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-semibold text-yellow-300 bg-yellow-500/10 border border-yellow-500/20">
                     <i data-lucide="layout-grid" class="w-4 h-4"></i> Platform Overview
                 </button>
+                <button onclick="showSection('owners')" id="btn-owners" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="users" class="w-4 h-4 text-yellow-400"></i> 👑 Owners &amp; Multi-Branch
+                </button>
                 <button onclick="showSection('businesses')" id="btn-businesses" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
-                    <i data-lucide="building" class="w-4 h-4"></i> All Businesses
+                    <i data-lucide="building" class="w-4 h-4"></i> All Branches
                 </button>
                 <button onclick="showSection('defaulters')" id="btn-defaulters" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i> Defaulters ⚠️
@@ -138,8 +141,43 @@
             </div>
         </section>
 
+        <!-- SECTION: OWNERS & MULTI-BRANCH PORTFOLIO -->
+        <section id="sec-owners" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                        👑 Business Owners &amp; Multi-Branch Portfolio
+                    </h2>
+                    <p class="text-xs text-gray-400">Click any Owner to inspect all their branches, total revenue &amp; bulk subscription status.</p>
+                </div>
+                <button onclick="loadOwnersData()" class="px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-300 text-xs font-bold border border-yellow-500/30 flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Owners
+                </button>
+            </div>
+
+            <div class="glass rounded-2xl overflow-hidden border border-yellow-500/20">
+                <table class="w-full text-left text-xs text-gray-300">
+                    <thead class="bg-black/40 text-yellow-400 uppercase text-[10px] font-bold border-b border-white/10">
+                        <tr>
+                            <th class="p-3.5">Owner Name</th>
+                            <th class="p-3.5">Total Branches</th>
+                            <th class="p-3.5">Active / Due</th>
+                            <th class="p-3.5">Total Members</th>
+                            <th class="p-3.5">Total Revenue</th>
+                            <th class="p-3.5">Paid to AutoBiz</th>
+                            <th class="p-3.5">Pending Due</th>
+                            <th class="p-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ownersTableBody" class="divide-y divide-white/5">
+                        <tr><td colspan="8" class="p-4 text-center text-gray-500">Loading Owners &amp; Multi-Branch Portfolio...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- SECTION: ALL BUSINESSES -->
-        <section id="sec-businesses" class="hidden space-y-4">
+        <section id="sec-businesses" class="hidden space-y-6">
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-extrabold text-white">All Registered <span class="gold-text">Businesses</span></h2>
                 <button onclick="loadData()" class="glass px-4 py-2 rounded-xl text-xs text-gray-300 hover:text-white flex items-center gap-2">
@@ -411,6 +449,7 @@ function renderBusinessTable(data) {
             </td>
         </tr>
     `).join('') : '<tr><td colspan="9" class="p-4 text-center text-gray-500">No businesses registered yet</td></tr>';
+    lucide.createIcons();
 }
 
 function filterBusinesses() {
@@ -573,10 +612,12 @@ async function triggerAutoNow() {
 }
 
 function showSection(name) {
-    ['overview','businesses','defaulters','reminders','income'].forEach(s => {
-        document.getElementById(`sec-${s}`).classList.add('hidden');
+    ['overview','owners','businesses','defaulters','reminders','income'].forEach(s => {
+        const el = document.getElementById(`sec-${s}`);
+        if (el) el.classList.add('hidden');
     });
-    document.getElementById(`sec-${name}`).classList.remove('hidden');
+    const target = document.getElementById(`sec-${name}`);
+    if (target) target.classList.remove('hidden');
     document.querySelectorAll('.nav-btn').forEach(b => {
         b.classList.remove('text-yellow-300','bg-yellow-500/10','border','border-yellow-500/20');
         b.classList.add('text-gray-400');
@@ -586,10 +627,361 @@ function showSection(name) {
         activeBtn.classList.add('text-yellow-300','bg-yellow-500/10','border','border-yellow-500/20');
         activeBtn.classList.remove('text-gray-400');
     }
+    if (name === 'owners') {
+        loadOwnersData();
+    }
     if (name === 'reminders') {
         scanDueReminders();
     }
 }
+
+let ownersCache = [];
+
+async function loadOwnersData() {
+    const tbody = document.getElementById('ownersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Loading Owners & Multi-Branch Portfolio...</td></tr>';
+    
+    try {
+        const res = await fetch('/superadmin/owners', { headers });
+        if (!res.ok) throw new Error("Failed to load owners");
+        ownersCache = await res.json();
+        
+        if (!ownersCache.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">No registered owners found.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = ownersCache.map((o, idx) => `
+            <tr class="hover:bg-white/5 cursor-pointer" onclick="openOwnerBranchesModal(${idx})">
+                <td class="p-3.5">
+                    <div class="font-extrabold text-white">${o.owner_name}</div>
+                    <div class="text-[11px] text-gray-400 font-mono">${o.phone} &bull; ${o.owner_email}</div>
+                </td>
+                <td class="p-3.5 font-bold text-yellow-400">
+                    🏢 ${o.total_branches} Branches
+                </td>
+                <td class="p-3.5">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${o.active_branches === o.total_branches ? 'bg-emerald-500/20 text-emerald-300' : 'bg-yellow-500/20 text-yellow-300'}">
+                        ${o.active_branches} Active / ${o.total_branches - o.active_branches} Due
+                    </span>
+                </td>
+                <td class="p-3.5 font-bold text-cyan-300">${o.total_members.toLocaleString('en-IN')} Members</td>
+                <td class="p-3.5 font-bold text-emerald-400">₹${o.total_revenue.toLocaleString('en-IN')}</td>
+                <td class="p-3.5 text-yellow-300 font-bold">₹${o.total_paid_to_platform.toLocaleString('en-IN')}</td>
+                <td class="p-3.5 font-bold ${o.total_pending_to_platform > 0 ? 'text-red-400' : 'text-gray-500'}">₹${o.total_pending_to_platform.toLocaleString('en-IN')}</td>
+                <td class="p-3.5 text-center">
+                    <button onclick="event.stopPropagation(); openOwnerBranchesModal(${idx})" class="px-3 py-1.5 rounded-xl bg-yellow-500/20 text-yellow-300 font-bold text-[11px] hover:bg-yellow-500/30">
+                        View ${o.total_branches} Branches →
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-400">Error: ${e.message}</td></tr>`;
+    }
+}
+
+function openOwnerBranchesModal(idx) {
+    const o = ownersCache[idx];
+    if (!o) return;
+    
+    document.getElementById('obmOwnerName').innerText = `${o.owner_name} (${o.total_branches} Branches)`;
+    document.getElementById('obmTotalStats').innerHTML = `Total Members: ${o.total_members.toLocaleString('en-IN')} | Total Revenue: ₹${o.total_revenue.toLocaleString('en-IN')} | Total Paid: ₹${o.total_paid_to_platform.toLocaleString('en-IN')}
+    <button onclick="bulkActivateOwner('${o.owner_email}')" class="ml-4 px-3 py-1 rounded-lg bg-yellow-500/20 text-yellow-300 font-bold text-xs hover:bg-yellow-500/30">
+        ⚡ Bulk Payment (All Gyms)
+    </button>`;
+    
+    const tbody = document.getElementById('obmBranchesTableBody');
+    tbody.innerHTML = o.branches.map(b => `
+        <tr class="hover:bg-white/5">
+            <td class="p-3">
+                <div class="font-bold text-white">${b.name}</div>
+                <div class="text-[10px] text-gray-400">${b.city}, ${b.state} &bull; ${b.business_type.toUpperCase()}</div>
+            </td>
+            <td class="p-3 text-cyan-300 font-bold">${b.members_count}</td>
+            <td class="p-3 text-emerald-400 font-bold">₹${b.revenue.toLocaleString('en-IN')}</td>
+            <td class="p-3 text-yellow-400">₹${b.pending.toLocaleString('en-IN')}</td>
+            <td class="p-3">
+                <div class="flex flex-col gap-1 items-start">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${b.subscription_status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}">
+                        ${b.subscription_status.toUpperCase()}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${b.autopilot_enabled ? 'bg-cyan-500/20 text-cyan-300' : 'bg-gray-500/20 text-gray-400'}">
+                        🤖 AI: ${b.autopilot_enabled ? 'ON' : 'OFF'}
+                    </span>
+                </div>
+            </td>
+            <td class="p-3 text-center space-x-1">
+                <button onclick="inspectBranch(${b.id})" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold text-[10px] hover:bg-cyan-500/30">
+                    🔍 Inspect Data
+                </button>
+                <button onclick="adminActivateBranch(${b.id})" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-[10px] hover:bg-emerald-500/30">
+                    ⚡ Activate 30d
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    document.getElementById('ownerDetailModal').classList.remove('hidden');
+    document.getElementById('ownerDetailModal').classList.add('flex');
+}
+
+async function bulkActivateOwner(ownerEmail) {
+    if(!confirm("Are you sure you want to process bulk payment and activate all branches for this owner?")) return;
+    try {
+        const res = await fetch(`/superadmin/owners/${encodeURIComponent(ownerEmail)}/bulk-activate?days=30`, { 
+            method: 'POST', 
+            headers 
+        });
+        if (!res.ok) throw new Error("Failed to bulk activate branches");
+        const data = await res.json();
+        alert(data.message);
+        loadOwnersData();
+        closeSuperModal('ownerDetailModal');
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+async function inspectBranch(branchId) {
+    try {
+        const res = await fetch(`/superadmin/branches/${branchId}/full-view`, { headers });
+        if (!res.ok) throw new Error("Failed to load branch details");
+        const d = await res.json();
+        
+        document.getElementById('biTitle').innerText = `${d.branch.name} — Full Administrative Audit`;
+        document.getElementById('biDetails').innerHTML = `
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Members</span><b class="text-white text-base">${d.stats.members_count}</b></div>
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Total Revenue</span><b class="text-emerald-400 text-base">₹${d.stats.total_revenue.toLocaleString('en-IN')}</b></div>
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Leads & Bookings</span><b class="text-purple-400 text-base">${d.stats.leads_count}</b></div>
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Staff Count</span><b class="text-cyan-400 text-base">${d.stats.staff_count}</b></div>
+            </div>
+            <div class="text-xs space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                <div><b>Owner:</b> ${d.branch.owner_name} (${d.branch.phone})</div>
+                <div><b>Address:</b> ${d.branch.address_line || 'N/A'}, ${d.branch.city}, ${d.branch.state} - ${d.branch.pincode}</div>
+                <div><b>Direct UPI:</b> <span class="font-mono text-cyan-300">${d.branch.upi_id || 'Not set'}</span></div>
+                <div><b>Subscription:</b> <span class="font-bold uppercase text-yellow-300">${d.branch.subscription_status} (End: ${d.branch.subscription_end || 'Never Paid'})</span></div>
+                <div><b>AI Autopilot:</b> <span class="font-bold ${d.branch.autopilot_enabled ? 'text-emerald-400' : 'text-red-400'}">${d.branch.autopilot_enabled ? 'ON (Active)' : 'OFF (Paused)'}</span></div>
+            </div>
+            
+            <h4 class="text-xs font-extrabold text-white mt-4 mb-2">Recent Customer Activity & Audit</h4>
+            <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${d.recent_audit && d.recent_audit.length ? d.recent_audit.map(a => 
+                    `<div class="text-[10px] bg-white/5 p-2 rounded border border-white/5">
+                        <span class="text-cyan-300 font-bold">[${new Date(a.time).toLocaleString()}]</span> 
+                        <span class="text-yellow-400 font-bold">${a.action}:</span> 
+                        <span class="text-gray-300">${a.details}</span> 
+                        <span class="text-gray-500">(by ${a.actor})</span>
+                    </div>`
+                ).join('') : '<div class="text-xs text-gray-500">No recent activity.</div>'}
+            </div>
+            
+            <h4 class="text-xs font-extrabold text-white mt-4 mb-2">Recent Documents Uploaded</h4>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+                ${d.recent_documents && d.recent_documents.length ? d.recent_documents.map(doc => 
+                    `<div class="text-[10px] bg-white/5 p-2 rounded border border-white/5 flex justify-between items-center">
+                        <div>
+                            <span class="text-purple-400 font-bold">[${doc.type}]</span> 
+                            <span class="text-gray-300 ml-1">${doc.title}</span> 
+                        </div>
+                        <span class="text-gray-500">${new Date(doc.time).toLocaleString()}</span>
+                    </div>`
+                ).join('') : '<div class="text-xs text-gray-500">No documents uploaded yet.</div>'}
+            </div>
+        `;
+        
+        document.getElementById('branchInspectorModal').classList.remove('hidden');
+        document.getElementById('branchInspectorModal').classList.add('flex');
+    } catch (e) {
+        alert("Inspector error: " + e.message);
+    }
+}
+
+async function adminActivateBranch(branchId) {
+    if (!confirm("Activate this branch for 30 Days?")) return;
+    try {
+        const res = await fetch(`/superadmin/branches/${branchId}/activate?days=30`, { method: 'POST', headers });
+        const d = await res.json();
+        alert(d.message);
+        loadOwnersData();
+        loadData();
+    } catch (e) {
+        alert("Activation error: " + e.message);
+    }
+}
+
+function closeSuperModal(id) {
+    document.getElementById(id).classList.add('hidden');
+    document.getElementById(id).classList.remove('flex');
+}
 </script>
+
+<!-- MODAL: OWNER MULTI-BRANCH DRILL DOWN -->
+<div id="ownerDetailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-4xl glass p-6 sm:p-8 rounded-3xl border-yellow-500/30 space-y-4 max-h-[90vh] overflow-y-auto relative">
+        <button onclick="closeSuperModal('ownerDetailModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+        <div>
+            <span class="text-[10px] font-extrabold text-yellow-400 uppercase tracking-wider">Owner Multi-Branch Portfolio</span>
+            <h2 class="text-xl font-extrabold text-white" id="obmOwnerName">Owner Name</h2>
+            <p class="text-xs text-gray-400" id="obmTotalStats">Loading summary...</p>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-white/10">
+            <table class="w-full text-left text-xs text-gray-300">
+                <thead class="bg-black/40 text-gray-400 uppercase text-[10px]">
+                    <tr>
+                        <th class="p-3">Branch &amp; City</th>
+                        <th class="p-3">Members</th>
+                        <th class="p-3">Revenue</th>
+                        <th class="p-3">Pending</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="obmBranchesTableBody" class="divide-y divide-white/5"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: BRANCH ADMINISTRATIVE INSPECTOR -->
+<div id="branchInspectorModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-lg glass p-6 sm:p-8 rounded-3xl border-cyan-500/30 space-y-4 relative">
+        <button onclick="closeSuperModal('branchInspectorModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+        <div>
+            <span class="text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">Administrative Branch Audit</span>
+            <h2 class="text-lg font-extrabold text-white" id="biTitle">Branch Name</h2>
+        </div>
+        <div id="biDetails" class="space-y-3">Loading branch data...</div>
+    </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- AI-WIDGET-START -->
+<!-- ================================================================ -->
+<style>
+#aiFloatBtn{position:fixed;bottom:24px;right:24px;z-index:9999;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;cursor:pointer;font-size:26px;box-shadow:0 4px 24px rgba(6,182,212,.45),0 2px 8px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#aiFloatBtn:hover{transform:scale(1.1);}
+#aiFloatBtn:active{transform:scale(.95);}
+#aiChatBox{display:none;position:fixed;bottom:94px;right:24px;z-index:9998;width:360px;max-height:570px;border-radius:20px;overflow:hidden;flex-direction:column;background:rgba(8,10,28,.97);border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.7);backdrop-filter:blur(24px);}
+#aiChatBox.aio{display:flex;}
+.aiH{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(8,25,55,.9),rgba(30,10,60,.9));border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.aiAv{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.aiT{font-weight:800;font-size:13px;color:#fff;}
+.aiSt{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.aiDt{width:6px;height:6px;border-radius:50%;background:#10b981;animation:aipls 2s infinite;}
+@keyframes aipls{0%,100%{opacity:1}50%{opacity:.4}}
+.aiStT{font-size:10px;color:#10b981;font-weight:700;}
+.aiX{margin-left:auto;background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:4px;}
+.aiX:hover{color:#fff;}
+.aiQ{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.aiQB{font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9ca3af;transition:all .15s;white-space:nowrap;}
+.aiQB:hover{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.4);color:#22d3ee;}
+.aiMsgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:290px;}
+.aiMsgs::-webkit-scrollbar{width:3px;}
+.aiMsgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+.mRow{display:flex;gap:8px;align-items:flex-end;}
+.mRow.mU{flex-direction:row-reverse;}
+.mAv{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.mAv.mBot{background:linear-gradient(135deg,#06b6d4,#7c3aed);}
+.mAv.mUsr{background:rgba(255,255,255,.1);}
+.mBub{max-width:80%;padding:9px 13px;border-radius:16px;font-size:12px;line-height:1.6;}
+.mBub.mBot{background:rgba(255,255,255,.06);color:#e2e8f0;border-radius:16px 16px 16px 4px;border:1px solid rgba(255,255,255,.06);}
+.mBub.mUsr{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(124,58,237,.25));color:#e0f2fe;border-radius:16px 16px 4px 16px;border:1px solid rgba(6,182,212,.2);}
+.mBub.mTyp{display:flex;gap:5px;align-items:center;}
+.mBub.mTyp span{width:7px;height:7px;border-radius:50%;background:#6b7280;animation:aibounce 1.2s infinite;}
+.mBub.mTyp span:nth-child(2){animation-delay:.2s;}
+.mBub.mTyp span:nth-child(3){animation-delay:.4s;}
+@keyframes aibounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.aiIn{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:rgba(0,0,0,.2);}
+.aiInp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 14px;font-size:12px;color:#fff;outline:none;transition:border-color .2s;}
+.aiInp::placeholder{color:#4b5563;}
+.aiInp:focus{border-color:rgba(6,182,212,.5);}
+.aiSnd{width:38px;height:38px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#06b6d4,#7c3aed);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aiSnd:active{transform:scale(.92);}
+</style>
+<button id="aiFloatBtn" onclick="aiTgl()" title="AutoBiz AI Help">&#129302;</button>
+<div id="aiChatBox">
+  <div class="aiH">
+    <div class="aiAv">&#129302;</div>
+    <div>
+      <div class="aiT">AutoBiz AI Co-Pilot</div>
+      <div class="aiSt"><div class="aiDt"></div><span class="aiStT">Online &middot; Powered by Gemini</span></div>
+    </div>
+    <button class="aiX" onclick="aiTgl()">&#x2715;</button>
+  </div>
+  <div class="aiQ">
+    <button class="aiQB" onclick="aiQ('Member kaise add karein?')">&#128100; Member</button>
+    <button class="aiQB" onclick="aiQ('Payment kaise record karein?')">&#128176; Payment</button>
+    <button class="aiQB" onclick="aiQ('Branch kaise add karein?')">&#127970; Branch</button>
+    <button class="aiQB" onclick="aiQ('AI Autopilot kya karta hai?')">&#129302; Autopilot</button>
+    <button class="aiQB" onclick="aiQ('Revenue charts kaise dekhein?')">&#128202; Reports</button>
+    <button class="aiQB" onclick="aiQ('Documents kaise upload karein?')">&#128193; Docs</button>
+    <button class="aiQB" onclick="aiQ('Upcoming renewals kaise dekhein?')">&#128276; Renewals</button>
+    <button class="aiQB" onclick="aiQ('Staff kaise add karein?')">&#128119; Staff</button>
+  </div>
+  <div class="aiMsgs" id="aiMsgs">
+    <div class="mRow">
+      <div class="mAv mBot">&#129302;</div>
+      <div class="mBub mBot">Namaste! &#128591; Main <b>AutoBiz AI Co-Pilot</b> hoon.<br><br>Koi bhi feature ke baare mein poochein &#8212; members, payments, branches, analytics, ya kuch bhi!</div>
+    </div>
+  </div>
+  <div class="aiIn">
+    <input class="aiInp" id="aiInp" placeholder="Kuch bhi poochein..." autocomplete="off">
+    <button class="aiSnd" onclick="aiSnd()">&#10148;</button>
+  </div>
+</div>
+<script>
+(function(){
+  var box=document.getElementById('aiChatBox');
+  var msgs=document.getElementById('aiMsgs');
+  var inp=document.getElementById('aiInp');
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiSnd();}});
+  window.aiTgl=function(){
+    box.classList.toggle('aio');
+    if(box.classList.contains('aio'))setTimeout(function(){inp.focus();},80);
+  };
+  window.aiQ=function(q){
+    if(!box.classList.contains('aio'))aiTgl();
+    inp.value=q;aiSnd();
+  };
+  function app(h){msgs.insertAdjacentHTML('beforeend',h);msgs.scrollTop=msgs.scrollHeight;}
+  window.aiSnd=function(){
+    var msg=inp.value.trim();if(!msg)return;inp.value='';
+    app('<div class="mRow mU"><div class="mAv mUsr">&#128100;</div><div class="mBub mUsr">'+msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div></div>');
+    var tid='aid'+Date.now();
+    app('<div class="mRow" id="'+tid+'"><div class="mAv mBot">&#129302;</div><div class="mBub mBot mTyp"><span></span><span></span><span></span></div></div>');
+    var KB=[
+      [['member','add member','naya member','customer add'],'&#128100; <b>Member add karne ke liye:</b><br><br>Dashboard &#10132; Members tab &#10132; <b>"+ Add Member"</b> click karein.<br><br>Name, phone, plan (Monthly/Quarterly/Yearly) aur start/end date fill karein &#10132; Save!'],
+      [['payment','fee','paisa','collection'],'&#128176; <b>Payment record karne ke liye:</b><br><br>Dashboard &#10132; Payments tab &#10132; <b>"+ Add Payment"</b> &#10132; Member select &#10132; Amount &amp; Mode (UPI/Cash/Card) &#10132; Save!'],
+      [['branch','add branch','new branch','location'],'&#127970; <b>New branch add karne ke liye:</b><br><br>Dashboard top mein <b>Branch Switcher</b> dropdown &#10132; <b>"+ Add New Branch"</b> &#10132; Business details fill karein &#10132; Submit!'],
+      [['autopilot','ai autopilot','automation'],'&#129302; <b>AI Autopilot:</b><br><br>Dashboard header mein ON/OFF toggle hai.<br><br>ON hone par automatically:<br>&#8226; WhatsApp renewal reminders<br>&#8226; Lead follow-up messages<br>&#8226; Payment pending alerts<br>&#8226; Daily business digest'],
+      [['report','revenue','analytics','chart','graph'],'&#128202; <b>Analytics &amp; Reports:</b><br><br>Dashboard &#10132; Overview tab &#10132; <b>"Advanced BI Analytics"</b><br><br>6 charts hain: Revenue Trend, Lead Funnel, Customer Retention, Branch Comparison, Footfall, Upcoming Renewals'],
+      [['document','file','upload','records'],'&#128193; <b>Documents:</b><br><br>Members list &#10132; member ke saamne <b>"Docs"</b> button &#10132; Type select &#10132; Title enter &#10132; Upload!<br><br>Secure vault mein store hote hain.'],
+      [['upi','upi id','bank'],'&#128179; <b>UPI ID setup:</b><br><br>Dashboard &#10132; Settings &#10132; UPI ID field (jaise: name@okhdfc)<br><br>100% payment directly aapke bank mein! Zero commission.'],
+      [['lead','trial','inquiry'],'&#127919; <b>Lead add karne ke liye:</b><br><br>Dashboard &#10132; Leads tab &#10132; <b>"+ Add Lead"</b> &#10132; Details fill karein.<br><br>WhatsApp se follow-up ya <b>"Convert"</b> se member bana sakte hain!'],
+      [['attendance','checkin','qr'],'&#128242; <b>QR Attendance:</b><br><br>Dashboard &#10132; QR Code tab &#10132; Unique QR dikhega.<br><br>Member scan karega &#10132; automatic attendance! Footfall chart mein real-time dikhe.'],
+      [['renewal','expire','expiry'],'&#128276; <b>Upcoming Renewals:</b><br><br>Dashboard &#10132; Overview tab &#10132; <b>"Upcoming Renewals (30 Days)"</b><br><br>Expire hone wale members ki list &#8212; Red=urgent, Yellow=soon.'],
+      [['staff','trainer','employee'],'&#128119; <b>Staff add karne ke liye:</b><br><br>Dashboard &#10132; Staff tab &#10132; <b>"+ Add Staff"</b> &#10132; Name, role (Trainer/Receptionist/Manager), phone &#10132; Save!'],
+      [['whatsapp','message','reminder'],'&#128172; <b>WhatsApp:</b><br><br>Leads/Members list mein har row ke saamne green <b>WhatsApp</b> button hai.<br><br>Click &#10132; WhatsApp Web opens with pre-written message!'],
+      [['login','password','forgot'],'&#128273; <b>Login/Password:</b><br><br>Agar password bhool gaye: Login page &#10132; "Forgot Password" &#10132; Phone &#10132; OTP verify &#10132; New password!'],
+    ];
+    var ans=null,ml=msg.toLowerCase();
+    for(var i=0;i<KB.length;i++){var ks=KB[i][0],rp=KB[i][1];for(var j=0;j<ks.length;j++){if(ml.indexOf(ks[j])>=0){ans=rp;break;}}if(ans)break;}
+    var tok=localStorage.getItem('autobiz_token')||localStorage.getItem('autobiz_admin_token')||'';
+    fetch('/ai/chat-assistant',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({message:msg,query:msg,role:'owner'})})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&(d.answer||d.reply))ans=(d.answer||d.reply).replace(/\n/g,'<br>');done();})
+    .catch(function(){done();});
+    function done(){
+      var el=document.getElementById(tid);if(el)el.remove();
+      if(!ans)ans='&#128591; Samajh nahi paya.<br><br>Aap pooch sakte hain:<br>&#8226; Member/Payment/Lead add karna<br>&#8226; Branch management<br>&#8226; AI Autopilot<br>&#8226; Revenue charts &amp; analytics<br>&#8226; Documents &amp; QR Attendance';
+      app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">'+ans+'</div></div>');
+    }
+  };
+})();
+</script>
+
 </body>
 </html>

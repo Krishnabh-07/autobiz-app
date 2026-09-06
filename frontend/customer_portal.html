@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -35,14 +35,33 @@
 
     <!-- STATE: Trial Booked -->
     <div id="state-TRIAL_BOOKED" class="hidden">
-        <div class="glass-card p-8 rounded-3xl border-cyan-500/30 text-center">
-            <i data-lucide="calendar-clock" class="w-16 h-16 text-cyan-400 mx-auto mb-4"></i>
-            <h2 class="text-2xl font-bold text-white mb-2">Trial Appointment Confirmed!</h2>
-            <p class="text-gray-400 mb-6">Your upcoming visit at <span id="tb-gym-name" class="font-bold text-white"></span> is scheduled.</p>
-            <span class="px-4 py-2 bg-cyan-500/20 text-cyan-300 font-bold rounded-full text-sm">STATUS: BOOKED</span>
-            <div class="mt-8 flex justify-center gap-4">
-                <button class="px-6 py-3 rounded-xl border border-white/10 hover:bg-white/5 transition text-sm font-semibold">Reschedule</button>
-                <button class="px-6 py-3 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition text-sm font-semibold">Cancel</button>
+        <div class="glass-card p-8 rounded-3xl border-cyan-500/30 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent"></div>
+            <i data-lucide="calendar-clock" class="w-16 h-16 text-cyan-400 mx-auto mb-4 relative z-10"></i>
+            <h2 class="text-2xl font-bold text-white mb-2 relative z-10">Trial Appointment Confirmed!</h2>
+            <p class="text-gray-400 mb-6 relative z-10">Your workout slot is reserved. Please show this screen at reception.</p>
+            
+            <div class="max-w-md mx-auto bg-black/40 border border-white/10 p-5 rounded-2xl space-y-3 text-left mb-6 relative z-10">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2.5">
+                    <span class="text-xs text-gray-400">Gym / Facility</span>
+                    <span class="text-sm font-bold text-white" id="tb-gym-name">Loading...</span>
+                </div>
+                <div class="flex justify-between items-center border-b border-white/5 pb-2.5">
+                    <span class="text-xs text-gray-400">Assigned Time Slot</span>
+                    <span class="text-sm font-bold text-emerald-400 flex items-center gap-1" id="tb-slot-name">
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i> 07:00 AM - 08:00 AM
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Pass Status</span>
+                    <span class="px-2.5 py-0.5 bg-cyan-500/20 text-cyan-300 font-extrabold rounded-full text-[11px]">ACTIVE TRIAL PASS</span>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-3 relative z-10 flex-wrap">
+                <button onclick="window.location.href='/explore.html'" class="btn-gradient px-6 py-2.5 rounded-xl text-xs font-bold text-slate-950 flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="compass" class="w-4 h-4"></i> 🗺️ Explore Nearby Businesses
+                </button>
             </div>
         </div>
     </div>
@@ -110,23 +129,149 @@
         <i data-lucide="search" class="w-16 h-16 text-gray-500 mx-auto mb-4"></i>
         <h2 class="text-2xl font-bold text-white mb-2">No Active Bookings</h2>
         <p class="text-gray-400 mb-6">You don't have any active trials or memberships yet.</p>
-        <a href="/explore.html" class="inline-block px-8 py-3 rounded-xl border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 transition font-bold text-sm">Explore Nearby Facilities</a>
+        <a href="/explore.html" class="btn-gradient inline-block px-8 py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">🗺️ Explore Nearby Facilities</a>
     </div>
 </div>
 
+<!-- ==========================================
+     EXPLORE NEARBY SECTION (Customer Only)
+     ========================================== -->
+<div class="max-w-6xl mx-auto px-4 pb-12" id="exploreNearbySection">
+    <div class="glass-card rounded-3xl p-6 border border-emerald-500/20">
+        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+            <div>
+                <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="compass" class="w-6 h-6 text-emerald-400"></i>
+                    🗺️ Explore Nearby Businesses
+                </h2>
+                <p class="text-xs text-gray-400 mt-1">Find gyms, clinics, salons & more near your location</p>
+            </div>
+            <a href="/explore.html" class="btn-gradient px-5 py-2 rounded-xl text-xs font-bold text-slate-950 flex items-center gap-2">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open Full Map
+            </a>
+        </div>
+
+        <!-- Category Pills -->
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none mb-4" id="portalCategoryPills">
+            <button onclick="portalLoadCategory('all')" class="portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap" data-cat="all">🏢 All</button>
+            <button onclick="portalLoadCategory('gym')" class="portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium text-gray-400 border border-white/5 whitespace-nowrap hover:text-white" data-cat="gym">🏋️ Gyms</button>
+            <button onclick="portalLoadCategory('clinic')" class="portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium text-gray-400 border border-white/5 whitespace-nowrap hover:text-white" data-cat="clinic">🏥 Clinics</button>
+            <button onclick="portalLoadCategory('salon')" class="portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium text-gray-400 border border-white/5 whitespace-nowrap hover:text-white" data-cat="salon">💇 Salons</button>
+            <button onclick="portalLoadCategory('coaching')" class="portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium text-gray-400 border border-white/5 whitespace-nowrap hover:text-white" data-cat="coaching">📚 Coaching</button>
+            <button onclick="portalLoadCategory('dental')" class="portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium text-gray-400 border border-white/5 whitespace-nowrap hover:text-white" data-cat="dental">🦷 Dental</button>
+        </div>
+
+        <!-- Business Grid Preview -->
+        <div id="portalExploreGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="col-span-3 text-center py-8 text-gray-400 text-sm animate-pulse">Finding businesses near you...</div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="/explore.html" class="text-emerald-400 text-sm font-semibold hover:underline">View all businesses & book →</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== CUSTOMER EXPLORE NEARBY SECTION =====
+let portalCurrentCategory = 'all';
+
+async function portalLoadCategory(cat) {
+    portalCurrentCategory = cat;
+    document.querySelectorAll('.portal-cat-btn').forEach(b => {
+        b.className = b.dataset.cat === cat
+            ? 'portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap'
+            : 'portal-cat-btn flex-shrink-0 px-4 py-2 rounded-xl text-xs font-medium text-gray-400 border border-white/5 whitespace-nowrap hover:text-white';
+    });
+    await portalLoadExplore();
+}
+
+async function portalLoadExplore() {
+    const grid = document.getElementById('portalExploreGrid');
+    grid.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-400 text-sm animate-pulse">Finding businesses near you...</div>';
+    try {
+        let url = '/businesses/explore?business_type=' + encodeURIComponent(portalCurrentCategory);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed');
+        const businesses = await res.json();
+
+        const defaults = {
+            gym: {emoji: '🏋️', color: 'emerald'},
+            clinic: {emoji: '🏥', color: 'cyan'},
+            salon: {emoji: '💇', color: 'pink'},
+            coaching: {emoji: '📚', color: 'yellow'},
+            dental: {emoji: '🦷', color: 'blue'},
+            cafe: {emoji: '🍽️', color: 'orange'},
+            service: {emoji: '🚗', color: 'purple'},
+            realestate: {emoji: '🏠', color: 'indigo'}
+        };
+
+        if (!businesses.length) {
+            grid.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-500 text-sm">No businesses found in this category yet.</div>';
+            return;
+        }
+
+        grid.innerHTML = businesses.slice(0, 6).map(b => {
+            const meta = defaults[b.business_type] || {emoji: '🏢', color: 'emerald'};
+            const dist = (Math.abs(Math.sin(b.id)) * 5 + 0.5).toFixed(1);
+            return `
+            <div class="bg-black/40 border border-white/5 hover:border-emerald-500/30 rounded-2xl overflow-hidden transition flex flex-col">
+                <img src="${b.image}" alt="${b.name}" class="w-full h-36 object-cover">
+                <div class="p-4 flex flex-col flex-1 justify-between gap-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-bold uppercase text-${meta.color}-400 bg-${meta.color}-500/10 px-2 py-0.5 rounded-full">${meta.emoji} ${b.business_type}</span>
+                            <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">🟢 Open</span>
+                        </div>
+                        <h3 class="font-bold text-white text-sm mt-1">${b.name}</h3>
+                        <p class="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                            <svg class="w-3 h-3 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6c0 4 6 10 6 10s6-6 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                            ${b.city} • 📍 ${dist} km away
+                        </p>
+                        <p class="text-[11px] text-cyan-400 font-semibold mt-1">From ${b.starting_price}</p>
+                    </div>
+                    <a href="/explore.html" class="w-full py-2 rounded-xl border border-emerald-500/40 text-emerald-400 text-xs font-bold text-center hover:bg-emerald-500/10 transition block">
+                        Book Now →
+                    </a>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        grid.innerHTML = '<div class="col-span-3 text-center py-8 text-gray-500 text-sm">Could not load businesses. <a href="/explore.html" class="text-emerald-400 underline">Open full explore page →</a></div>';
+    }
+}
+
+// Auto-load on page ready
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(portalLoadExplore, 800);
+});
+</script>
+
 <!-- UPI Payment Modal -->
 <div id="paymentModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
-    <div class="w-full max-w-sm glass-card p-8 rounded-3xl border-emerald-500/30 relative space-y-5 text-center">
+    <div class="w-full max-w-sm glass-card p-6 sm:p-8 rounded-3xl border-emerald-500/30 relative space-y-4 text-center">
         <button onclick="closePayment()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&#x2715;</button>
         <h3 class="text-xl font-extrabold text-white">Direct UPI Payment</h3>
-        <p class="text-sm text-gray-400">Zero commission. Money goes directly to the gym owner.</p>
-        <div class="bg-white p-3 rounded-2xl w-48 h-48 mx-auto shadow-xl shadow-emerald-500/20"><img id="upiQR" src="" class="w-full h-full rounded-xl"></div>
-        <div class="bg-black/50 p-4 rounded-xl border border-white/10 text-left space-y-2">
-            <div class="flex justify-between"><span class="text-gray-400 text-xs">Plan</span><span class="font-bold text-white text-sm" id="payPlan">--</span></div>
-            <div class="flex justify-between"><span class="text-gray-400 text-xs">Amount</span><span class="font-bold text-emerald-400 text-sm" id="payAmount">--</span></div>
-            <div class="flex justify-between"><span class="text-gray-400 text-xs">Paying to</span><span class="font-bold text-white text-sm" id="payGymName">--</span></div>
+        <p class="text-xs text-gray-400">Zero commission. 100% money goes directly to gym owner.</p>
+        
+        <div class="bg-white p-2.5 rounded-2xl w-44 h-44 mx-auto shadow-xl shadow-emerald-500/20">
+            <img id="upiQR" src="" class="w-full h-full rounded-xl">
         </div>
-        <button onclick="confirmPayment()" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">I Have Paid via UPI</button>
+        
+        <div class="bg-black/50 p-3.5 rounded-xl border border-white/10 text-left space-y-1.5 text-xs">
+            <div class="flex justify-between"><span class="text-gray-400">Selected Plan</span><span class="font-bold text-white" id="payPlan">--</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Amount Payable</span><span class="font-bold text-emerald-400" id="payAmount">--</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Paying Directly To</span><span class="font-bold text-white" id="payGymName">--</span></div>
+        </div>
+
+        <div class="text-left">
+            <label class="block text-[11px] font-semibold text-gray-300 mb-1">UPI Ref / UTR No. (Optional)</label>
+            <input type="text" id="payUtr" placeholder="e.g. 423891029384" class="w-full px-3.5 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-emerald-400">
+        </div>
+
+        <button onclick="confirmPayment()" id="btnConfirmPay" class="btn-gradient w-full py-3.5 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
+            I Have Paid via UPI ➔ Activate Pass
+        </button>
     </div>
 </div>
 
@@ -134,6 +279,9 @@
     lucide.createIcons();
     const phone = localStorage.getItem('member_phone');
     let currentGymData = null;
+    let selectedPlan = '';
+    let selectedPlanAmount = 0;
+
     if (!phone) { window.location.href = '/explore.html'; }
 
     async function loadProfile() {
@@ -151,8 +299,13 @@
             const el = document.getElementById('state-' + data.state);
             if (el) el.classList.remove('hidden');
             else document.getElementById('state-NEW_LEAD').classList.remove('hidden');
+
             if (data.state === 'TRIAL_BOOKED') {
                 document.getElementById('tb-gym-name').innerText = data.gym_data ? data.gym_data.name : 'Unknown Gym';
+                if (document.getElementById('tb-slot-name') && data.data) {
+                    document.getElementById('tb-slot-name').innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5"></i> ${data.data.time_slot || 'Standard Batch'}`;
+                    lucide.createIcons();
+                }
             } else if (data.state === 'TRIAL_COMPLETED') {
                 document.getElementById('tc-gym-name').innerText = data.gym_data ? data.gym_data.name : 'the club';
             } else if (data.state === 'ACTIVE_MEMBER') {
@@ -161,7 +314,8 @@
                 document.getElementById('am-plan').innerText = data.data.membership_type || 'Active Plan';
                 document.getElementById('am-start').innerText = data.data.start_date || '--';
                 document.getElementById('am-end').innerText = data.data.end_date || '--';
-                document.getElementById('memberQR').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent('AUTOBIZ|' + phone + '|' + gymName);
+                const qrData = encodeURIComponent(`AUTOBIZ-PASS|${phone}|${gymName}|${data.data.membership_type}|VALID`);
+                document.getElementById('memberQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${qrData}`;
             } else if (data.state === 'EXPIRED_MEMBER') {
                 document.getElementById('em-gym-name').innerText = data.gym_data ? data.gym_data.name : 'Unknown';
                 document.getElementById('em-end').innerText = data.data.end_date || '--';
@@ -179,6 +333,8 @@
     }
 
     function openPayment(planName, amount) {
+        selectedPlan = planName;
+        selectedPlanAmount = amount;
         document.getElementById('payPlan').innerText = planName;
         document.getElementById('payAmount').innerText = '\u20B9' + amount;
         const gymName = currentGymData ? currentGymData.name : 'Gym Owner';
@@ -195,10 +351,42 @@
         document.getElementById('paymentModal').classList.remove('flex');
     }
 
-    function confirmPayment() {
-        closePayment();
-        document.querySelectorAll('[id^="state-"]').forEach(el => el.classList.add('hidden'));
-        document.getElementById('state-ACTIVE_MEMBER').classList.remove('hidden');
+    async function confirmPayment() {
+        const btn = document.getElementById('btnConfirmPay');
+        btn.disabled = true;
+        btn.innerText = "Verifying & Activating Pass...";
+
+        const gymId = currentGymData ? currentGymData.id : 1;
+        const utr = document.getElementById('payUtr').value;
+
+        const payload = {
+            phone: phone,
+            gym_id: gymId,
+            plan_name: selectedPlan || 'Monthly Plan',
+            amount: selectedPlanAmount || 800,
+            utr_number: utr || null,
+            payment_mode: 'UPI'
+        };
+
+        try {
+            const res = await fetch('/payments/customer-confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                closePayment();
+                alert('🎉 Payment Confirmed! Your Digital Member Access Pass is now active.');
+                loadProfile();
+            } else {
+                alert('Payment verification failed. Please try again or contact the owner.');
+            }
+        } catch (err) {
+            alert('Network error while confirming payment.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "I Have Paid via UPI ➔ Activate Pass";
+        }
     }
 
     function logout() {
@@ -210,5 +398,140 @@
     loadProfile();
 </script>
 <script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+
+<!-- ================================================================ -->
+<style>
+#aiFloatBtn{position:fixed;bottom:24px;right:24px;z-index:9999;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;cursor:pointer;font-size:26px;box-shadow:0 4px 24px rgba(6,182,212,.45),0 2px 8px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#aiFloatBtn:hover{transform:scale(1.1);}
+#aiFloatBtn:active{transform:scale(.95);}
+#aiChatBox{display:none;position:fixed;bottom:94px;right:24px;z-index:9998;width:360px;max-height:570px;border-radius:20px;overflow:hidden;flex-direction:column;background:rgba(8,10,28,.97);border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.7);backdrop-filter:blur(24px);}
+#aiChatBox.aio{display:flex;}
+.aiH{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(8,25,55,.9),rgba(30,10,60,.9));border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.aiAv{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.aiT{font-weight:800;font-size:13px;color:#fff;}
+.aiSt{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.aiDt{width:6px;height:6px;border-radius:50%;background:#10b981;animation:aipls 2s infinite;}
+@keyframes aipls{0%,100%{opacity:1}50%{opacity:.4}}
+.aiStT{font-size:10px;color:#10b981;font-weight:700;}
+.aiX{margin-left:auto;background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:4px;}
+.aiX:hover{color:#fff;}
+.aiQ{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.aiQB{font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9ca3af;transition:all .15s;white-space:nowrap;}
+.aiQB:hover{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.4);color:#22d3ee;}
+.aiMsgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:290px;}
+.aiMsgs::-webkit-scrollbar{width:3px;}
+.aiMsgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+.mRow{display:flex;gap:8px;align-items:flex-end;}
+.mRow.mU{flex-direction:row-reverse;}
+.mAv{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.mAv.mBot{background:linear-gradient(135deg,#06b6d4,#7c3aed);}
+.mAv.mUsr{background:rgba(255,255,255,.1);}
+.mBub{max-width:80%;padding:9px 13px;border-radius:16px;font-size:12px;line-height:1.6;}
+.mBub.mBot{background:rgba(255,255,255,.06);color:#e2e8f0;border-radius:16px 16px 16px 4px;border:1px solid rgba(255,255,255,.06);}
+.mBub.mUsr{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(124,58,237,.25));color:#e0f2fe;border-radius:16px 16px 4px 16px;border:1px solid rgba(6,182,212,.2);}
+.mBub.mTyp{display:flex;gap:5px;align-items:center;}
+.mBub.mTyp span{width:7px;height:7px;border-radius:50%;background:#6b7280;animation:aibounce 1.2s infinite;}
+.mBub.mTyp span:nth-child(2){animation-delay:.2s;}
+.mBub.mTyp span:nth-child(3){animation-delay:.4s;}
+@keyframes aibounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.aiIn{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:rgba(0,0,0,.2);}
+.aiInp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 14px;font-size:12px;color:#fff;outline:none;transition:border-color .2s;}
+.aiInp::placeholder{color:#4b5563;}
+.aiInp:focus{border-color:rgba(6,182,212,.5);}
+.aiSnd{width:38px;height:38px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#06b6d4,#7c3aed);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aiSnd:active{transform:scale(.92);}
+</style>
+<button id="aiFloatBtn" onclick="aiTgl()" title="AutoBiz AI Customer Assistant">&#129302;</button>
+<div id="aiChatBox">
+  <div class="aiH">
+    <div class="aiAv">&#129302;</div>
+    <div>
+      <div class="aiT">AutoBiz AI</div>
+      <div class="aiSt"><div class="aiDt"></div><span class="aiStT">Customer AI Assistant &middot; Online</span></div>
+    </div>
+    <button class="aiX" onclick="aiTgl()">&#x2715;</button>
+  </div>
+  <div class="aiQ">
+    <button class="aiQB" onclick="aiQ('Meri membership kab expire hogi?')">&#9203; Expiry Date?</button>
+    <button class="aiQB" onclick="aiQ('Meri booking kab hai?')">&#128197; Meri Booking?</button>
+    <button class="aiQB" onclick="aiQ('Meri membership ka plan kya hai?')">&#128203; Mera Plan?</button>
+    <button class="aiQB" onclick="aiQ('Payment status kya hai?')">&#128179; Payment Status?</button>
+    <button class="aiQB" onclick="aiQ('Nearby gym kaise find karun?')">&#128205; Nearby Gyms?</button>
+    <button class="aiQB" onclick="aiQ('Appointment kaise book karun?')">&#128197; Book Appointment?</button>
+  </div>
+  <div class="aiMsgs" id="aiMsgs">
+    <div class="mRow">
+      <div class="mAv mBot">&#129302;</div>
+      <div class="mBub mBot">Namaste! &#128591; Main <b>AutoBiz AI Customer Assistant</b> hoon.<br><br>Aap mujhse pooch sakte hain:<br>&#8226; Meri membership kab expire hogi?<br>&#8226; Meri booking kab hai?<br>&#8226; Payment status kya hai?<br>&#8226; Nearby gym kaise find karun?<br>&#8226; Appointment kaise book karun?</div>
+    </div>
+  </div>
+  <div class="aiIn">
+    <input class="aiInp" id="aiInp" placeholder="Apna sawaal poochein..." autocomplete="off">
+    <button class="aiSnd" onclick="aiSnd()">&#10148;</button>
+  </div>
+</div>
+<script>
+(function(){
+  var box=document.getElementById('aiChatBox');
+  var msgs=document.getElementById('aiMsgs');
+  var inp=document.getElementById('aiInp');
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiSnd();}});
+  window.aiTgl=function(){
+    box.classList.toggle('aio');
+    if(box.classList.contains('aio'))setTimeout(function(){inp.focus();},80);
+  };
+  window.aiQ=function(q){
+    if(!box.classList.contains('aio'))aiTgl();
+    inp.value=q;aiSnd();
+  };
+  function app(h){msgs.insertAdjacentHTML('beforeend',h);msgs.scrollTop=msgs.scrollHeight;}
+  window.aiSnd=function(){
+    var msg=inp.value.trim();if(!msg)return;inp.value='';
+    app('<div class="mRow mU"><div class="mAv mUsr">&#128100;</div><div class="mBub mUsr">'+msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div></div>');
+    var tid='aid'+Date.now();
+    app('<div class="mRow" id="'+tid+'"><div class="mAv mBot">&#129302;</div><div class="mBub mBot mTyp"><span></span><span></span><span></span></div></div>');
+    
+    var cPhone = localStorage.getItem('member_phone') || '';
+    var tok = localStorage.getItem('member_token') || '';
+    var ans = null;
+    
+    // Strict Client-Side Privacy Check
+    var ml = msg.toLowerCase();
+    var confidential = ['revenue', 'turnover', 'income', 'profit', 'earnings', 'kamai', 'owner revenue', 'database', 'sql', 'api key', 'source code', 'admin', 'god mode'];
+    if (confidential.some(function(w){ return ml.indexOf(w) >= 0; })) {
+      setTimeout(function(){
+        var el=document.getElementById(tid);if(el)el.remove();
+        app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">&#128274; <b>Security Guardrail Active:</b> Main sirf aapke authorized account data (memberships, bookings, appointments) mein help kar sakta hoon. Business financials aur internal database strictly private hain.</div></div>');
+      }, 300);
+      return;
+    }
+
+    fetch('/ai/chat-assistant', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': tok ? ('Bearer ' + tok) : ''
+      },
+      body: JSON.stringify({
+        message: msg,
+        query: msg,
+        role: 'customer',
+        context_phone: cPhone
+      })
+    })
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&(d.answer||d.reply))ans=(d.answer||d.reply).replace(/\n/g,'<br>');done();})
+    .catch(function(){done();});
+
+    function done(){
+      var el=document.getElementById(tid);if(el)el.remove();
+      if(!ans)ans='&#128591; Samajh nahi paya.<br><br>Aap pooch sakte hain:<br>&#8226; Meri membership kab expire hogi?<br>&#8226; Meri booking kab hai?<br>&#8226; Payment status kya hai?<br>&#8226; Nearby gym kaise find karun?<br>&#8226; Appointment kaise book karun?';
+      app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">'+ans+'</div></div>');
+    }
+  };
+})();
+</script>
+
+
 </body>
 </html>

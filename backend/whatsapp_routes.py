@@ -2,6 +2,13 @@
 whatsapp_routes.py — WhatsApp Automation, AI Message Generation & 3-Day Expiry Engine
 """
 
+import os
+import sys
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+if _current_dir not in sys.path:
+    sys.path.insert(0, _current_dir)
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
