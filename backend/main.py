@@ -532,6 +532,7 @@ import asyncio
 
 class OTPRequest(BaseModel):
     phone: str
+    email: Optional[str] = None
 
 class OTPVerify(BaseModel):
     phone: str
@@ -541,6 +542,8 @@ class OTPVerify(BaseModel):
 async def request_member_otp(req: OTPRequest, db: Session = Depends(get_db)):
     now = datetime.now()
     phone = req.phone.strip()
+    email_address = req.email.strip() if req.email else None
+    
     if not phone:
         raise HTTPException(status_code=400, detail="Phone number is required")
         
@@ -577,7 +580,25 @@ async def request_member_otp(req: OTPRequest, db: Session = Depends(get_db)):
     msg_text = f"🤖 AutoBiz Pass:\nAapka login OTP hai: *{otp_code}*\n\nApne portal me access ke liye ise darj karein! 🚀"
     await send_whatsapp_message(phone, msg_text, sender_name="AutoBiz Auth", channel="channel_2")
     
-    return {"message": "OTP Sent via WhatsApp", "mock_otp": otp_code}
+    email_sent_ok = False
+    if email_address:
+        import email_service
+        email_body = f"Hello,\n\nYour OTP for AutoBiz Login is: {otp_code}\n\nDo not share this OTP with anyone.\n\nThanks,\nAutoBiz Team"
+        email_sent_ok = email_service.send_email(to_email=email_address, subject="Your AutoBiz Login OTP", body=email_body, is_html=False)
+        if not email_sent_ok:
+            raise HTTPException(status_code=500, detail="Failed to send OTP email. Please verify configuration or try again.")
+    else:
+        # Fallback to member email if available
+        member = db.query(models.Member).filter(models.Member.phone == phone).first()
+        if member and member.email:
+            import email_service
+            email_body = f"Hello {member.full_name},\n\nYour OTP for AutoBiz Login is: {otp_code}\n\nDo not share this OTP with anyone.\n\nThanks,\nAutoBiz Team"
+            email_sent_ok = email_service.send_email(to_email=member.email, subject="Your AutoBiz Login OTP", body=email_body, is_html=False)
+            if not email_sent_ok:
+                raise HTTPException(status_code=500, detail="Failed to send OTP email to your registered address. Please verify configuration.")
+    
+    msg_out = "OTP Sent successfully via WhatsApp and Email" if email_sent_ok else "OTP Sent via WhatsApp"
+    return {"message": msg_out, "mock_otp": otp_code}
 
 @app.post("/auth/member/verify-otp", tags=["Authentication"])
 def verify_member_otp(req: OTPVerify, db: Session = Depends(get_db)):

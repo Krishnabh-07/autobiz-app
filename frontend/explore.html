@@ -231,6 +231,11 @@
                         <input type="tel" id="customerPhone" placeholder="10-digit number" class="flex-1 w-full px-4 py-3 rounded-r-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Email Address (Optional)</label>
+                    <input type="email" id="customerEmail" placeholder="your@email.com" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                </div>
                 
                 <button onclick="requestOTP()" id="reqOtpBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
                     Send Login OTP
@@ -274,11 +279,13 @@
             document.getElementById('otpVerifyStep').classList.add('hidden');
             document.getElementById('otpMsg').classList.add('hidden');
             document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
             document.getElementById('customerOtp').value = '';
         }
 
         async function requestOTP() {
             const phone = document.getElementById('customerPhone').value.trim();
+            const email = document.getElementById('customerEmail').value.trim();
             if (!phone || phone.length < 10) {
                 alert('Please enter a valid 10-digit number'); return;
             }
@@ -290,7 +297,7 @@
                 const res = await fetch('/auth/member/request-otp', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ phone: phone })
+                    body: JSON.stringify({ phone: phone, email: email })
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -299,7 +306,7 @@
                     document.getElementById('otpVerifyStep').classList.remove('hidden');
                     
                     // Show alert with OTP (since we aren't connected to Meta API natively yet)
-                    alert(`✅ WhatsApp SMS Engine Triggered!\n\n(Dev Mode): Your OTP is ${data.mock_otp}\n\nEnter this to login!`);
+                    alert(`✅ ${data.message}\n\n(Dev Mode): Your OTP is ${data.mock_otp}\n\nEnter this to login!`);
                 } else {
                     alert('Error: ' + data.detail);
                 }
