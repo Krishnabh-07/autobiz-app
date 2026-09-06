@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>God Mode — Krishnabh Super Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: #04060f; color: #f3f4f6; }
+        .glass { background: rgba(15,23,42,0.7); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.08); }
+        .gold-text { background: linear-gradient(135deg,#f7971e,#ffd200); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .green-text { background: linear-gradient(135deg,#00f5a0,#00d9f5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .btn-gold { background: linear-gradient(135deg,#f7971e,#ffd200); }
+        .btn-gold:hover { box-shadow: 0 0 25px rgba(247,151,30,0.4); }
+        .status-active { background: rgba(0,245,160,0.15); color: #00f5a0; }
+        .status-trial { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .status-expired { background: rgba(239,68,68,0.15); color: #ef4444; }
+        #loginGate { position:fixed; inset:0; z-index:100; background:#04060f; display:flex; align-items:center; justify-content:center; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- Login Gate -->
+<div id="loginGate">
+    <div class="glass p-8 rounded-3xl w-full max-w-sm space-y-5 border-yellow-500/30 shadow-2xl">
+        <div class="text-center space-y-1">
+            <div class="text-4xl">👑</div>
+            <h1 class="text-xl font-extrabold text-white">God Mode Access</h1>
+            <p class="text-xs text-gray-400">Krishnabh ka private Super Admin panel</p>
+        </div>
+        <div class="space-y-3">
+            <input type="password" id="adminKeyInput" placeholder="Enter Secret Key" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-yellow-400">
+            <label class="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
+                <input type="checkbox" id="rememberMe" checked class="rounded accent-yellow-400">
+                <span>Remember on this laptop (Auto-login)</span>
+            </label>
+        </div>
+        <button onclick="verifyAdminKey()" class="btn-gold w-full py-3 rounded-xl font-extrabold text-slate-950 text-sm">Enter God Mode 👑</button>
+        <div id="loginErr" class="hidden text-center text-xs text-red-400 font-semibold">❌ Wrong key! Access Denied.</div>
+    </div>
+</div>
+
+<!-- Main God Mode Dashboard -->
+<div id="godModeDash" class="hidden min-h-screen flex flex-col md:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-60 glass p-6 flex flex-col justify-between border-r border-white/10 shrink-0">
+        <div class="space-y-6">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-2xl">👑</span>
+                    <span class="font-extrabold text-lg gold-text">GOD MODE</span>
+                </div>
+                <p class="text-[11px] text-gray-400">Krishnabh's Private Control Panel</p>
+            </div>
+            <nav class="space-y-1.5 text-sm">
+                <button onclick="showSection('overview')" id="btn-overview" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-semibold text-yellow-300 bg-yellow-500/10 border border-yellow-500/20">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i> Platform Overview
+                </button>
+                <button onclick="showSection('owners')" id="btn-owners" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="users" class="w-4 h-4 text-yellow-400"></i> 👑 Owners &amp; Multi-Branch
+                </button>
+                <button onclick="showSection('businesses')" id="btn-businesses" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="building" class="w-4 h-4"></i> All Branches
+                </button>
+                <button onclick="showSection('defaulters')" id="btn-defaulters" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> Defaulters ⚠️
+                </button>
+                <button onclick="showSection('reminders')" id="btn-reminders" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="message-square" class="w-4 h-4"></i> WhatsApp AI Reminders 🤖
+                </button>
+                <button onclick="showSection('income')" id="btn-income" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-left font-medium text-gray-400 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="indian-rupee" class="w-4 h-4"></i> Income Tracker
+                </button>
+            </nav>
+        </div>
+        <div class="pt-4 border-t border-white/10 space-y-2">
+            <a href="/" class="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition">
+                <i data-lucide="globe" class="w-3.5 h-3.5 text-cyan-400"></i> 3D Website
+            </a>
+            <a href="/dashboard.html" class="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition">
+                <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-emerald-400"></i> Owner Dashboard
+            </a>
+            <button onclick="lockGodMode()" class="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i> Lock God Mode
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto">
+
+        <!-- SECTION: OVERVIEW -->
+        <section id="sec-overview" class="space-y-6">
+            <div>
+                <h1 class="text-3xl font-extrabold">Platform <span class="gold-text">God Mode</span> 👑</h1>
+                <p class="text-sm text-gray-400">Poori duniya ka live data — ek nazar mein. Zero Jhooth.</p>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="glass p-5 rounded-2xl space-y-1">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5"><i data-lucide="building" class="w-3.5 h-3.5 text-yellow-400"></i> Total Businesses</div>
+                    <div class="text-3xl font-extrabold text-white" id="ov-total">—</div>
+                    <div class="text-[11px] text-yellow-400" id="ov-type-breakdown">Loading...</div>
+                </div>
+                <div class="glass p-5 rounded-2xl space-y-1">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5 text-cyan-400"></i> Total Members (All)</div>
+                    <div class="text-3xl font-extrabold text-white" id="ov-members">—</div>
+                    <div class="text-[11px] text-cyan-400">100% Verified, Zero Jhooth</div>
+                </div>
+                <div class="glass p-5 rounded-2xl space-y-1">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5"><i data-lucide="indian-rupee" class="w-3.5 h-3.5 text-emerald-400"></i> Platform Monthly Income</div>
+                    <div class="text-3xl font-extrabold green-text" id="ov-income">—</div>
+                    <div class="text-[11px] text-emerald-400">₹1,500 × Active Businesses</div>
+                </div>
+                <div class="glass p-5 rounded-2xl space-y-1">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i> Active Subscriptions</div>
+                    <div class="text-3xl font-extrabold text-emerald-400" id="ov-active">—</div>
+                    <div class="text-[11px] text-gray-400">Paying Customers</div>
+                </div>
+                <div class="glass p-5 rounded-2xl space-y-1">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-400"></i> Defaulters / Trial</div>
+                    <div class="text-3xl font-extrabold text-red-400" id="ov-defaulters">—</div>
+                    <div class="text-[11px] text-red-400">Need WhatsApp Nudge 😂</div>
+                </div>
+                <div class="glass p-5 rounded-2xl space-y-1">
+                    <div class="text-xs text-gray-400 flex items-center gap-1.5"><i data-lucide="target" class="w-3.5 h-3.5 text-purple-400"></i> Total Leads (All)</div>
+                    <div class="text-3xl font-extrabold text-white" id="ov-leads">—</div>
+                    <div class="text-[11px] text-purple-400">Across All Businesses</div>
+                </div>
+            </div>
+
+            <div class="glass p-6 rounded-2xl space-y-4">
+                <h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="pie-chart" class="w-4 h-4 text-yellow-400"></i> Business Category Breakdown</h3>
+                <div id="typeBreakdown" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="text-gray-500 text-sm">Loading...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: OWNERS & MULTI-BRANCH PORTFOLIO -->
+        <section id="sec-owners" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                        👑 Business Owners &amp; Multi-Branch Portfolio
+                    </h2>
+                    <p class="text-xs text-gray-400">Click any Owner to inspect all their branches, total revenue &amp; bulk subscription status.</p>
+                </div>
+                <button onclick="loadOwnersData()" class="px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-300 text-xs font-bold border border-yellow-500/30 flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Owners
+                </button>
+            </div>
+
+            <div class="glass rounded-2xl overflow-hidden border border-yellow-500/20">
+                <table class="w-full text-left text-xs text-gray-300">
+                    <thead class="bg-black/40 text-yellow-400 uppercase text-[10px] font-bold border-b border-white/10">
+                        <tr>
+                            <th class="p-3.5">Owner Name</th>
+                            <th class="p-3.5">Total Branches</th>
+                            <th class="p-3.5">Active / Due</th>
+                            <th class="p-3.5">Total Members</th>
+                            <th class="p-3.5">Total Revenue</th>
+                            <th class="p-3.5">Paid to AutoBiz</th>
+                            <th class="p-3.5">Pending Due</th>
+                            <th class="p-3.5 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ownersTableBody" class="divide-y divide-white/5">
+                        <tr><td colspan="8" class="p-4 text-center text-gray-500">Loading Owners &amp; Multi-Branch Portfolio...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION: ALL BUSINESSES -->
+        <section id="sec-businesses" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-extrabold text-white">All Registered <span class="gold-text">Businesses</span></h2>
+                <button onclick="loadData()" class="glass px-4 py-2 rounded-xl text-xs text-gray-300 hover:text-white flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400"></i> Refresh
+                </button>
+            </div>
+
+            <div class="flex gap-3 flex-wrap">
+                <input type="text" id="bizSearch" onkeyup="filterBusinesses()" placeholder="Search by name, owner, city..." class="glass px-4 py-2.5 rounded-xl text-sm text-white outline-none w-64">
+                <select id="bizTypeFilter" onchange="filterBusinesses()" class="glass px-4 py-2.5 rounded-xl text-sm text-gray-300 outline-none bg-slate-900">
+                    <option value="">All Types</option>
+                    <option value="gym">Gym</option>
+                    <option value="clinic">Clinic</option>
+                    <option value="salon">Salon</option>
+                    <option value="coaching">Coaching</option>
+                    <option value="dental">Dental</option>
+                </select>
+                <select id="bizStatusFilter" onchange="filterBusinesses()" class="glass px-4 py-2.5 rounded-xl text-sm text-gray-300 outline-none bg-slate-900">
+                    <option value="">All Status</option>
+                    <option value="active">Active ✅</option>
+                    <option value="trial">Trial 🟡</option>
+                    <option value="expired">Expired ❌</option>
+                </select>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-gray-300">
+                    <thead class="bg-black/40 text-gray-400 uppercase text-[11px] font-bold border-b border-white/10">
+                        <tr>
+                            <th class="p-3">#</th>
+                            <th class="p-3">Business</th>
+                            <th class="p-3">Type</th>
+                            <th class="p-3">Owner</th>
+                            <th class="p-3">City</th>
+                            <th class="p-3">Members</th>
+                            <th class="p-3">Revenue</th>
+                            <th class="p-3">Subscription</th>
+                            <th class="p-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bizTableBody" class="divide-y divide-white/5">
+                        <tr><td colspan="9" class="p-4 text-center text-gray-500">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECTION: DEFAULTERS -->
+        <section id="sec-defaulters" class="hidden space-y-4">
+            <h2 class="text-2xl font-extrabold text-white">Subscription <span class="text-red-400">Defaulters</span> 💀</h2>
+            <p class="text-sm text-gray-400">Ye owners ne abhi tak subscription pay nahi kiya. WhatsApp maar do! 😂</p>
+            <div id="defaulterCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="text-gray-500 text-sm">Loading...</div>
+            </div>
+        </section>
+
+        <!-- SECTION: WHATSAPP AI REMINDERS -->
+        <section id="sec-reminders" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-white">WhatsApp AI <span class="green-text">Auto-Reminder Engine</span> 🤖</h2>
+                    <p class="text-sm text-gray-400">100% Background Autopilot: Roz subah 9:00 AM bina kisi manual intervention ke auto-dispatch hota hai!</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 px-4 py-2 rounded-full glass border-emerald-500/30 text-emerald-400 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        AUTOPILOT: ACTIVE (Daily 09:00 AM)
+                    </div>
+                    <button onclick="triggerAutoNow()" class="btn-gold text-slate-950 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i> Run Autopilot Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Owner 3-day reminders (Channel 1) -->
+            <div class="glass p-6 rounded-2xl space-y-4 border-yellow-500/30">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <i data-lucide="building" class="w-4 h-4 text-yellow-400"></i> Channel 1: Auto-Sent to Owners (Subscription 3-Day Reminders)
+                    </h3>
+                    <span class="text-xs text-yellow-400 font-semibold">Krishnabh &rarr; Owners</span>
+                </div>
+                <div id="ownerRemindersList" class="space-y-3">
+                    <div class="text-gray-500 text-sm">Loading automated owner queue...</div>
+                </div>
+            </div>
+
+            <!-- Member 3-day reminders (Channel 2) -->
+            <div class="glass p-6 rounded-2xl space-y-4 border-cyan-500/30">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i> Channel 2: Auto-Sent to Members (3-Day Plan Reminders)
+                    </h3>
+                    <span class="text-xs text-cyan-400 font-semibold">Gym Owner &rarr; Members</span>
+                </div>
+                <div id="memberRemindersList" class="space-y-3">
+                    <div class="text-gray-500 text-sm">Loading automated member queue...</div>
+                </div>
+            </div>
+
+            <!-- Live Auto-Dispatched Audit Logs -->
+            <div class="glass p-6 rounded-2xl space-y-4 border-emerald-500/20">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i data-lucide="history" class="w-4 h-4 text-emerald-400"></i> Live Background Dispatch Audit Trail (Meta WhatsApp Cloud)
+                </h3>
+                <div id="superadminDispatchHistory" class="space-y-2.5 max-h-72 overflow-y-auto">
+                    <div class="text-gray-500 text-sm">Loading background logs...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: INCOME -->
+        <section id="sec-income" class="hidden space-y-6">
+            <h2 class="text-2xl font-extrabold text-white">Platform <span class="green-text">Income Tracker</span> 💰</h2>
+            <div class="glass p-6 rounded-2xl space-y-4">
+                <h3 class="font-bold text-white text-sm">Current Month Income</h3>
+                <div class="text-5xl font-extrabold green-text" id="inc-current">₹0</div>
+                <p class="text-xs text-gray-400" id="inc-desc">0 active businesses × ₹1,500</p>
+            </div>
+            <div class="glass p-6 rounded-2xl space-y-4">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4 text-yellow-400"></i> Income Milestones (Targets)</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="milestones">
+                    <div class="space-y-1 p-4 rounded-xl bg-white/5">
+                        <div class="text-xs text-gray-400">10 Businesses</div>
+                        <div class="text-xl font-bold text-white">₹15,000</div>
+                        <div class="text-[11px] text-gray-500">per month</div>
+                    </div>
+                    <div class="space-y-1 p-4 rounded-xl bg-white/5">
+                        <div class="text-xs text-gray-400">50 Businesses</div>
+                        <div class="text-xl font-bold text-yellow-400">₹75,000</div>
+                        <div class="text-[11px] text-gray-500">per month</div>
+                    </div>
+                    <div class="space-y-1 p-4 rounded-xl bg-white/5">
+                        <div class="text-xs text-gray-400">100 Businesses</div>
+                        <div class="text-xl font-bold text-emerald-400">₹1,50,000</div>
+                        <div class="text-[11px] text-gray-500">per month</div>
+                    </div>
+                    <div class="space-y-1 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                        <div class="text-xs text-yellow-400">500 Businesses</div>
+                        <div class="text-xl font-bold gold-text">₹7,50,000</div>
+                        <div class="text-[11px] text-yellow-400">per month 🔥</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl space-y-2">
+                <h3 class="text-sm font-bold text-gray-400">Yearly Projected Income (Current)</h3>
+                <div class="text-4xl font-extrabold gold-text" id="inc-yearly">₹0</div>
+                <p class="text-xs text-gray-400">Based on current active subscribers × 12 months</p>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+lucide.createIcons();
+
+const ADMIN_KEY = "krishnabh_god_mode_2024_secret";
+
+// Auto-Login if saved in localStorage
+window.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('krishnabh_superadmin_key');
+    if (savedKey === ADMIN_KEY) {
+        unlockGodMode();
+    }
+});
+
+function verifyAdminKey() {
+    const key = document.getElementById('adminKeyInput').value.trim();
+    if (key === ADMIN_KEY) {
+        if (document.getElementById('rememberMe').checked) {
+            localStorage.setItem('krishnabh_superadmin_key', ADMIN_KEY);
+        }
+        unlockGodMode();
+    } else {
+        document.getElementById('loginErr').classList.remove('hidden');
+        setTimeout(() => document.getElementById('loginErr').classList.add('hidden'), 2000);
+    }
+}
+
+function unlockGodMode() {
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('godModeDash').classList.remove('hidden');
+    loadData();
+}
+
+function lockGodMode() {
+    localStorage.removeItem('krishnabh_superadmin_key');
+    document.getElementById('loginGate').style.display = 'flex';
+    document.getElementById('godModeDash').classList.add('hidden');
+    document.getElementById('adminKeyInput').value = '';
+}
+
+document.getElementById('adminKeyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') verifyAdminKey();
+});
+
+const headers = { 'x-admin-key': ADMIN_KEY };
+let allBusinesses = [];
+
+async function loadData() {
+    await Promise.all([loadOverview(), loadBusinesses(), loadDefaulters(), loadIncome()]);
+}
+
+async function loadOverview() {
+    const res = await fetch('/superadmin/overview', { headers });
+    if (!res.ok) return;
+    const d = await res.json();
+    document.getElementById('ov-total').innerText = d.total_businesses;
+    document.getElementById('ov-members').innerText = d.total_members.toLocaleString('en-IN');
+    document.getElementById('ov-income').innerText = `₹${d.platform_monthly_income.toLocaleString('en-IN')}`;
+    document.getElementById('ov-active').innerText = d.subscription_summary.active;
+    document.getElementById('ov-defaulters').innerText = d.subscription_summary.defaulters;
+    document.getElementById('ov-leads').innerText = d.total_leads;
+
+    const icons = { gym: '🏋️', clinic: '🏥', salon: '💇', coaching: '🏫', dental: '🦷', cafe: '🍽️', service: '🚗', realestate: '🏠' };
+    document.getElementById('typeBreakdown').innerHTML = d.business_type_breakdown.map(t => `
+        <div class="glass p-4 rounded-xl text-center space-y-1">
+            <div class="text-2xl">${icons[t.type] || '🏢'}</div>
+            <div class="font-bold text-white text-lg">${t.count}</div>
+            <div class="text-[11px] text-gray-400 capitalize">${t.type}</div>
+        </div>
+    `).join('') || '<div class="text-gray-500 text-sm">No businesses yet</div>';
+
+    const breakdown = d.business_type_breakdown.map(t => `${t.count} ${t.type}`).join(' · ');
+    document.getElementById('ov-type-breakdown').innerText = breakdown || 'No data';
+}
+
+async function loadBusinesses() {
+    const res = await fetch('/superadmin/businesses', { headers });
+    if (!res.ok) return;
+    allBusinesses = await res.json();
+    renderBusinessTable(allBusinesses);
+}
+
+function renderBusinessTable(data) {
+    const statusBadge = (s) => {
+        const map = { active: 'status-active', trial: 'status-trial', expired: 'status-expired' };
+        const icons = { active: '✅', trial: '🟡', expired: '❌' };
+        return `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${map[s] || 'status-trial'}">${icons[s] || '?'} ${s}</span>`;
+    };
+    const typeIcons = { gym: '🏋️', clinic: '🏥', salon: '💇', coaching: '🏫', dental: '🦷' };
+
+    document.getElementById('bizTableBody').innerHTML = data.length ? data.map(b => `
+        <tr class="hover:bg-white/5 transition">
+            <td class="p-3 text-gray-500">${b.id}</td>
+            <td class="p-3">
+                <div class="font-bold text-white">${b.business_name}</div>
+                <div class="text-[10px] text-gray-500">${b.email}</div>
+            </td>
+            <td class="p-3">${typeIcons[b.business_type] || '🏢'} <span class="capitalize">${b.business_type}</span></td>
+            <td class="p-3">
+                <div class="font-semibold">${b.owner_name}</div>
+                <div class="text-[10px] text-gray-500">${b.phone}</div>
+            </td>
+            <td class="p-3 text-gray-400">${b.city}</td>
+            <td class="p-3 font-bold text-cyan-400">${b.member_count}</td>
+            <td class="p-3 font-bold text-emerald-400">₹${b.revenue_collected.toLocaleString('en-IN')}</td>
+            <td class="p-3">${statusBadge(b.subscription_status)}</td>
+            <td class="p-3">
+                <div class="flex gap-1.5">
+                    <button onclick="activateSub(${b.id}, 'active', 'monthly')" class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold hover:bg-emerald-500/40 transition">
+                        ✅ Activate
+                    </button>
+                    <button onclick="sendWhatsApp('${b.phone}', '${b.owner_name}', '${b.business_name}', '${b.subscription_status}')" class="px-2 py-1 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold hover:bg-purple-500/40 transition">
+                        💬 WA
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('') : '<tr><td colspan="9" class="p-4 text-center text-gray-500">No businesses registered yet</td></tr>';
+    lucide.createIcons();
+}
+
+function filterBusinesses() {
+    const search = document.getElementById('bizSearch').value.toLowerCase();
+    const type = document.getElementById('bizTypeFilter').value;
+    const status = document.getElementById('bizStatusFilter').value;
+    const filtered = allBusinesses.filter(b =>
+        (!search || b.business_name.toLowerCase().includes(search) || b.owner_name.toLowerCase().includes(search) || (b.city||'').toLowerCase().includes(search)) &&
+        (!type || b.business_type === type) &&
+        (!status || b.subscription_status === status)
+    );
+    renderBusinessTable(filtered);
+}
+
+async function loadDefaulters() {
+    const res = await fetch('/superadmin/defaulters', { headers });
+    if (!res.ok) return;
+    const data = await res.json();
+    const memes = [
+        "Bhai subscription khatam hone wala hai! 💀 Dashboard gayab ho jayega. Renew karo abhi!",
+        "Oye! Bill bhar de warna data delete ho jayega 😂 Sochna mat, seedha pay karo!",
+        "Subscription expire ho gaya! Gym ka data ud gaya kya? 🤣 Pay karo → renew link",
+        "Arey bhai! Paisa nahi doge toh dashboard kaise chalega? 💸 Jaldi renew karo!",
+        "💀 Tumhara dashboard band hone wala hai! 3 din bacha hai. Renew karo ya pachtao!"
+    ];
+    document.getElementById('defaulterCards').innerHTML = data.length ? data.map((d, i) => `
+        <div class="glass p-5 rounded-2xl border border-red-500/20 space-y-3">
+            <div class="flex items-start justify-between">
+                <div>
+                    <div class="font-bold text-white">${d.business_name}</div>
+                    <div class="text-[11px] text-gray-400">${d.owner_name} · ${d.city}</div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${d.status === 'expired' ? 'status-expired' : 'status-trial'}">${d.status === 'expired' ? '❌ Expired' : '🟡 Trial'}</span>
+            </div>
+            <div class="text-[11px] text-gray-400">${d.phone} · ${d.email}</div>
+            <div class="p-3 rounded-xl bg-red-500/10 text-[11px] text-red-300 italic">"${memes[i % memes.length]}"</div>
+            <button onclick="sendDefaulterWhatsApp('${d.phone}', '${d.owner_name}', '${d.business_name}', ${i})" class="w-full py-2 rounded-xl bg-green-500/20 text-green-300 text-xs font-bold hover:bg-green-500/30 transition">
+                💬 Send WhatsApp Reminder
+            </button>
+        </div>
+    `).join('') : '<div class="col-span-3 glass p-8 rounded-2xl text-center text-emerald-400 font-bold">🎉 Koi defaulter nahi! Sab paying customers hain!</div>';
+}
+
+async function loadIncome() {
+    const res = await fetch('/superadmin/income', { headers });
+    if (!res.ok) return;
+    const d = await res.json();
+    document.getElementById('inc-current').innerText = `₹${d.monthly_income.toLocaleString('en-IN')}`;
+    document.getElementById('inc-desc').innerText = `${d.active_paying_businesses} active businesses × ₹1,500`;
+    document.getElementById('inc-yearly').innerText = `₹${d.yearly_projected.toLocaleString('en-IN')}`;
+}
+
+async function activateSub(gymId, status, plan) {
+    const res = await fetch(`/superadmin/businesses/${gymId}/subscription?status=${status}&plan=${plan}`, {
+        method: 'PATCH', headers
+    });
+    if (res.ok) {
+        alert('✅ Subscription Activated!');
+        loadData();
+    }
+}
+
+function sendWhatsApp(phone, ownerName, bizName, status) {
+    const msgs = {
+        active: `Hi ${ownerName}! Your ${bizName} dashboard is active. Keep growing! 🚀`,
+        trial: `Hey ${ownerName}! Your free trial at AutoBiz is running. Upgrade to full plan for ₹1,500/month & unlock all features! 🔥`,
+        expired: `Oye ${ownerName}! ${bizName} ka subscription khatam ho gaya! 💀 Dashboard gayab hone wala hai. Abhi renew karo! 😂`
+    };
+    const msg = msgs[status] || msgs.trial;
+    window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function sendDefaulterWhatsApp(phone, ownerName, bizName, idx) {
+    const memes = [
+        `Bhai ${ownerName}! ${bizName} ka subscription khatam hone wala hai! 💀 Dashboard gayab ho jayega bhai. Renew karo abhi → Pay ₹1,500: wa.me/pay`,
+        `Oye ${ownerName}! ${bizName} ka bill bhar de warna data delete ho jayega 😂 Seedha pay karo → ₹1,500 only!`,
+        `${ownerName} bhai! ${bizName} ka subscription expire ho gaya! Gym ka data ud gaya kya? 🤣 Pay karo renew karo!`,
+        `Arey ${ownerName} bhai! Paisa nahi doge toh ${bizName} ka dashboard kaise chalega? 💸 Jaldi ₹1,500 renew karo!`,
+        `💀 ${ownerName}! ${bizName} ka dashboard band hone wala hai! Renew karo ya pachtao! ₹1,500 abhi pay karo 🔥`
+    ];
+    window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(memes[idx % memes.length])}`, '_blank');
+}
+
+async function scanDueReminders() {
+    try {
+        const res = await fetch('/whatsapp/scan-due-reminders');
+        if (!res.ok) return;
+        const d = await res.json();
+        
+        // Members list
+        const mList = document.getElementById('memberRemindersList');
+        mList.innerHTML = d.member_reminders.length ? d.member_reminders.map(m => `
+            <div class="glass p-4 rounded-xl border border-cyan-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <div class="font-bold text-white">${m.name} <span class="text-xs text-gray-400 font-normal">(${m.business})</span></div>
+                    <div class="text-xs text-cyan-400">Expires: ${m.end_date} (${m.days_left} Days Left)</div>
+                    <div class="text-[11px] text-gray-400 mt-1 italic max-w-xl">"${m.message.substring(0, 80)}..."</div>
+                </div>
+                <a href="${m.whatsapp_url}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 font-bold text-xs hover:bg-emerald-500/30 transition shrink-0 flex items-center gap-2">
+                    💬 Send Meme Reminder
+                </a>
+            </div>
+        `).join('') : '<div class="text-gray-500 text-sm">Koi customer 3 din mein expire nahi ho raha. All active!</div>';
+
+        // Owners list
+        const oList = document.getElementById('ownerRemindersList');
+        oList.innerHTML = d.owner_reminders.length ? d.owner_reminders.map(o => `
+            <div class="glass p-4 rounded-xl border border-yellow-500/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <div class="font-bold text-white">${o.owner_name} <span class="text-xs text-gray-400 font-normal">(${o.business_name})</span></div>
+                    <div class="text-xs text-yellow-400">Subscription End: ${o.subscription_end} (${o.days_left} Days Left)</div>
+                    <div class="text-[11px] text-gray-400 mt-1 italic max-w-xl">"${o.message.substring(0, 80)}..."</div>
+                </div>
+                <a href="${o.whatsapp_url}" target="_blank" class="px-4 py-2 rounded-xl bg-yellow-500/20 text-yellow-300 font-bold text-xs hover:bg-yellow-500/30 transition shrink-0 flex items-center gap-2">
+                    💬 Send Owner Renewal Alert
+                </a>
+            </div>
+        `).join('') : '<div class="text-gray-500 text-sm">Koi business subscription 3 din mein expire nahi ho raha. All good!</div>';
+
+        // Load Dispatch History
+        const hRes = await fetch('/whatsapp/dispatch-history');
+        if (hRes.ok) {
+            const hData = await hRes.json();
+            const hContainer = document.getElementById('superadminDispatchHistory');
+            hContainer.innerHTML = hData.length ? hData.map(h => `
+                <div class="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase ${h.channel === 'channel_1' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-cyan-500/20 text-cyan-300'}">
+                                ${h.channel === 'channel_1' ? 'Channel 1 (Krishnabh → Owner)' : 'Channel 2 (Owner → Member)'}
+                            </span>
+                            <span class="font-bold text-white">To: +${h.to_phone}</span>
+                            <span class="text-[10px] text-gray-500">${h.timestamp}</span>
+                        </div>
+                        <p class="text-gray-300 text-[11px] mt-1 italic">"${h.message.substring(0, 85)}..."</p>
+                    </div>
+                    <span class="text-[10px] font-bold text-emerald-400 shrink-0">● ${h.status}</span>
+                </div>
+            `).join('') : '<div class="text-gray-500 text-sm">No automated logs yet.</div>';
+        }
+
+    } catch (e) {
+        console.error("Scan error", e);
+    }
+}
+
+async function triggerAutoNow() {
+    try {
+        const res = await fetch('/whatsapp/trigger-automation-now', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (res.ok) {
+            alert('🚀 Autopilot Executed! Both Channel 1 (Owners) & Channel 2 (Members) processed automatically!');
+            scanDueReminders();
+        }
+    } catch (e) {
+        console.error("Autopilot trigger error", e);
+    }
+}
+
+function showSection(name) {
+    ['overview','owners','businesses','defaulters','reminders','income'].forEach(s => {
+        const el = document.getElementById(`sec-${s}`);
+        if (el) el.classList.add('hidden');
+    });
+    const target = document.getElementById(`sec-${name}`);
+    if (target) target.classList.remove('hidden');
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('text-yellow-300','bg-yellow-500/10','border','border-yellow-500/20');
+        b.classList.add('text-gray-400');
+    });
+    const activeBtn = document.getElementById(`btn-${name}`);
+    if (activeBtn) {
+        activeBtn.classList.add('text-yellow-300','bg-yellow-500/10','border','border-yellow-500/20');
+        activeBtn.classList.remove('text-gray-400');
+    }
+    if (name === 'owners') {
+        loadOwnersData();
+    }
+    if (name === 'reminders') {
+        scanDueReminders();
+    }
+}
+
+let ownersCache = [];
+
+async function loadOwnersData() {
+    const tbody = document.getElementById('ownersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Loading Owners & Multi-Branch Portfolio...</td></tr>';
+    
+    try {
+        const res = await fetch('/superadmin/owners', { headers });
+        if (!res.ok) throw new Error("Failed to load owners");
+        ownersCache = await res.json();
+        
+        if (!ownersCache.length) {
+            tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">No registered owners found.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = ownersCache.map((o, idx) => `
+            <tr class="hover:bg-white/5 cursor-pointer" onclick="openOwnerBranchesModal(${idx})">
+                <td class="p-3.5">
+                    <div class="font-extrabold text-white">${o.owner_name}</div>
+                    <div class="text-[11px] text-gray-400 font-mono">${o.phone} &bull; ${o.owner_email}</div>
+                </td>
+                <td class="p-3.5 font-bold text-yellow-400">
+                    🏢 ${o.total_branches} Branches
+                </td>
+                <td class="p-3.5">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${o.active_branches === o.total_branches ? 'bg-emerald-500/20 text-emerald-300' : 'bg-yellow-500/20 text-yellow-300'}">
+                        ${o.active_branches} Active / ${o.total_branches - o.active_branches} Due
+                    </span>
+                </td>
+                <td class="p-3.5 font-bold text-cyan-300">${o.total_members.toLocaleString('en-IN')} Members</td>
+                <td class="p-3.5 font-bold text-emerald-400">₹${o.total_revenue.toLocaleString('en-IN')}</td>
+                <td class="p-3.5 text-yellow-300 font-bold">₹${o.total_paid_to_platform.toLocaleString('en-IN')}</td>
+                <td class="p-3.5 font-bold ${o.total_pending_to_platform > 0 ? 'text-red-400' : 'text-gray-500'}">₹${o.total_pending_to_platform.toLocaleString('en-IN')}</td>
+                <td class="p-3.5 text-center">
+                    <button onclick="event.stopPropagation(); openOwnerBranchesModal(${idx})" class="px-3 py-1.5 rounded-xl bg-yellow-500/20 text-yellow-300 font-bold text-[11px] hover:bg-yellow-500/30">
+                        View ${o.total_branches} Branches →
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-400">Error: ${e.message}</td></tr>`;
+    }
+}
+
+function openOwnerBranchesModal(idx) {
+    const o = ownersCache[idx];
+    if (!o) return;
+    
+    document.getElementById('obmOwnerName').innerText = `${o.owner_name} (${o.total_branches} Branches)`;
+    document.getElementById('obmTotalStats').innerHTML = `Total Members: ${o.total_members.toLocaleString('en-IN')} | Total Revenue: ₹${o.total_revenue.toLocaleString('en-IN')} | Total Paid: ₹${o.total_paid_to_platform.toLocaleString('en-IN')}
+    <button onclick="bulkActivateOwner('${o.owner_email}')" class="ml-4 px-3 py-1 rounded-lg bg-yellow-500/20 text-yellow-300 font-bold text-xs hover:bg-yellow-500/30">
+        ⚡ Bulk Payment (All Gyms)
+    </button>`;
+    
+    const tbody = document.getElementById('obmBranchesTableBody');
+    tbody.innerHTML = o.branches.map(b => `
+        <tr class="hover:bg-white/5">
+            <td class="p-3">
+                <div class="font-bold text-white">${b.name}</div>
+                <div class="text-[10px] text-gray-400">${b.city}, ${b.state} &bull; ${b.business_type.toUpperCase()}</div>
+            </td>
+            <td class="p-3 text-cyan-300 font-bold">${b.members_count}</td>
+            <td class="p-3 text-emerald-400 font-bold">₹${b.revenue.toLocaleString('en-IN')}</td>
+            <td class="p-3 text-yellow-400">₹${b.pending.toLocaleString('en-IN')}</td>
+            <td class="p-3">
+                <div class="flex flex-col gap-1 items-start">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${b.subscription_status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}">
+                        ${b.subscription_status.toUpperCase()}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${b.autopilot_enabled ? 'bg-cyan-500/20 text-cyan-300' : 'bg-gray-500/20 text-gray-400'}">
+                        🤖 AI: ${b.autopilot_enabled ? 'ON' : 'OFF'}
+                    </span>
+                </div>
+            </td>
+            <td class="p-3 text-center space-x-1">
+                <button onclick="inspectBranch(${b.id})" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold text-[10px] hover:bg-cyan-500/30">
+                    🔍 Inspect Data
+                </button>
+                <button onclick="adminActivateBranch(${b.id})" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold text-[10px] hover:bg-emerald-500/30">
+                    ⚡ Activate 30d
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    document.getElementById('ownerDetailModal').classList.remove('hidden');
+    document.getElementById('ownerDetailModal').classList.add('flex');
+}
+
+async function bulkActivateOwner(ownerEmail) {
+    if(!confirm("Are you sure you want to process bulk payment and activate all branches for this owner?")) return;
+    try {
+        const res = await fetch(`/superadmin/owners/${encodeURIComponent(ownerEmail)}/bulk-activate?days=30`, { 
+            method: 'POST', 
+            headers 
+        });
+        if (!res.ok) throw new Error("Failed to bulk activate branches");
+        const data = await res.json();
+        alert(data.message);
+        loadOwnersData();
+        closeSuperModal('ownerDetailModal');
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+async function inspectBranch(branchId) {
+    try {
+        const res = await fetch(`/superadmin/branches/${branchId}/full-view`, { headers });
+        if (!res.ok) throw new Error("Failed to load branch details");
+        const d = await res.json();
+        
+        document.getElementById('biTitle').innerText = `${d.branch.name} — Full Administrative Audit`;
+        document.getElementById('biDetails').innerHTML = `
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Members</span><b class="text-white text-base">${d.stats.members_count}</b></div>
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Total Revenue</span><b class="text-emerald-400 text-base">₹${d.stats.total_revenue.toLocaleString('en-IN')}</b></div>
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Leads & Bookings</span><b class="text-purple-400 text-base">${d.stats.leads_count}</b></div>
+                <div class="p-2.5 bg-black/40 rounded-xl"><span class="text-gray-400 block text-[10px]">Staff Count</span><b class="text-cyan-400 text-base">${d.stats.staff_count}</b></div>
+            </div>
+            <div class="text-xs space-y-1 bg-black/30 p-3 rounded-xl border border-white/5">
+                <div><b>Owner:</b> ${d.branch.owner_name} (${d.branch.phone})</div>
+                <div><b>Address:</b> ${d.branch.address_line || 'N/A'}, ${d.branch.city}, ${d.branch.state} - ${d.branch.pincode}</div>
+                <div><b>Direct UPI:</b> <span class="font-mono text-cyan-300">${d.branch.upi_id || 'Not set'}</span></div>
+                <div><b>Subscription:</b> <span class="font-bold uppercase text-yellow-300">${d.branch.subscription_status} (End: ${d.branch.subscription_end || 'Never Paid'})</span></div>
+                <div><b>AI Autopilot:</b> <span class="font-bold ${d.branch.autopilot_enabled ? 'text-emerald-400' : 'text-red-400'}">${d.branch.autopilot_enabled ? 'ON (Active)' : 'OFF (Paused)'}</span></div>
+            </div>
+            
+            <h4 class="text-xs font-extrabold text-white mt-4 mb-2">Recent Customer Activity & Audit</h4>
+            <div class="space-y-2 max-h-40 overflow-y-auto">
+                ${d.recent_audit && d.recent_audit.length ? d.recent_audit.map(a => 
+                    `<div class="text-[10px] bg-white/5 p-2 rounded border border-white/5">
+                        <span class="text-cyan-300 font-bold">[${new Date(a.time).toLocaleString()}]</span> 
+                        <span class="text-yellow-400 font-bold">${a.action}:</span> 
+                        <span class="text-gray-300">${a.details}</span> 
+                        <span class="text-gray-500">(by ${a.actor})</span>
+                    </div>`
+                ).join('') : '<div class="text-xs text-gray-500">No recent activity.</div>'}
+            </div>
+            
+            <h4 class="text-xs font-extrabold text-white mt-4 mb-2">Recent Documents Uploaded</h4>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+                ${d.recent_documents && d.recent_documents.length ? d.recent_documents.map(doc => 
+                    `<div class="text-[10px] bg-white/5 p-2 rounded border border-white/5 flex justify-between items-center">
+                        <div>
+                            <span class="text-purple-400 font-bold">[${doc.type}]</span> 
+                            <span class="text-gray-300 ml-1">${doc.title}</span> 
+                        </div>
+                        <span class="text-gray-500">${new Date(doc.time).toLocaleString()}</span>
+                    </div>`
+                ).join('') : '<div class="text-xs text-gray-500">No documents uploaded yet.</div>'}
+            </div>
+        `;
+        
+        document.getElementById('branchInspectorModal').classList.remove('hidden');
+        document.getElementById('branchInspectorModal').classList.add('flex');
+    } catch (e) {
+        alert("Inspector error: " + e.message);
+    }
+}
+
+async function adminActivateBranch(branchId) {
+    if (!confirm("Activate this branch for 30 Days?")) return;
+    try {
+        const res = await fetch(`/superadmin/branches/${branchId}/activate?days=30`, { method: 'POST', headers });
+        const d = await res.json();
+        alert(d.message);
+        loadOwnersData();
+        loadData();
+    } catch (e) {
+        alert("Activation error: " + e.message);
+    }
+}
+
+function closeSuperModal(id) {
+    document.getElementById(id).classList.add('hidden');
+    document.getElementById(id).classList.remove('flex');
+}
+</script>
+
+<!-- MODAL: OWNER MULTI-BRANCH DRILL DOWN -->
+<div id="ownerDetailModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-4xl glass p-6 sm:p-8 rounded-3xl border-yellow-500/30 space-y-4 max-h-[90vh] overflow-y-auto relative">
+        <button onclick="closeSuperModal('ownerDetailModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+        <div>
+            <span class="text-[10px] font-extrabold text-yellow-400 uppercase tracking-wider">Owner Multi-Branch Portfolio</span>
+            <h2 class="text-xl font-extrabold text-white" id="obmOwnerName">Owner Name</h2>
+            <p class="text-xs text-gray-400" id="obmTotalStats">Loading summary...</p>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-white/10">
+            <table class="w-full text-left text-xs text-gray-300">
+                <thead class="bg-black/40 text-gray-400 uppercase text-[10px]">
+                    <tr>
+                        <th class="p-3">Branch &amp; City</th>
+                        <th class="p-3">Members</th>
+                        <th class="p-3">Revenue</th>
+                        <th class="p-3">Pending</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="obmBranchesTableBody" class="divide-y divide-white/5"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: BRANCH ADMINISTRATIVE INSPECTOR -->
+<div id="branchInspectorModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-lg glass p-6 sm:p-8 rounded-3xl border-cyan-500/30 space-y-4 relative">
+        <button onclick="closeSuperModal('branchInspectorModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+        <div>
+            <span class="text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">Administrative Branch Audit</span>
+            <h2 class="text-lg font-extrabold text-white" id="biTitle">Branch Name</h2>
+        </div>
+        <div id="biDetails" class="space-y-3">Loading branch data...</div>
+    </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- AI-WIDGET-START -->
+<!-- ================================================================ -->
+<style>
+#aiFloatBtn{position:fixed;bottom:24px;right:24px;z-index:9999;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;cursor:pointer;font-size:26px;box-shadow:0 4px 24px rgba(6,182,212,.45),0 2px 8px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#aiFloatBtn:hover{transform:scale(1.1);}
+#aiFloatBtn:active{transform:scale(.95);}
+#aiChatBox{display:none;position:fixed;bottom:94px;right:24px;z-index:9998;width:360px;max-height:570px;border-radius:20px;overflow:hidden;flex-direction:column;background:rgba(8,10,28,.97);border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.7);backdrop-filter:blur(24px);}
+#aiChatBox.aio{display:flex;}
+.aiH{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(8,25,55,.9),rgba(30,10,60,.9));border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.aiAv{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.aiT{font-weight:800;font-size:13px;color:#fff;}
+.aiSt{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.aiDt{width:6px;height:6px;border-radius:50%;background:#10b981;animation:aipls 2s infinite;}
+@keyframes aipls{0%,100%{opacity:1}50%{opacity:.4}}
+.aiStT{font-size:10px;color:#10b981;font-weight:700;}
+.aiX{margin-left:auto;background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:4px;}
+.aiX:hover{color:#fff;}
+.aiQ{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.aiQB{font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9ca3af;transition:all .15s;white-space:nowrap;}
+.aiQB:hover{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.4);color:#22d3ee;}
+.aiMsgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:290px;}
+.aiMsgs::-webkit-scrollbar{width:3px;}
+.aiMsgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+.mRow{display:flex;gap:8px;align-items:flex-end;}
+.mRow.mU{flex-direction:row-reverse;}
+.mAv{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.mAv.mBot{background:linear-gradient(135deg,#06b6d4,#7c3aed);}
+.mAv.mUsr{background:rgba(255,255,255,.1);}
+.mBub{max-width:80%;padding:9px 13px;border-radius:16px;font-size:12px;line-height:1.6;}
+.mBub.mBot{background:rgba(255,255,255,.06);color:#e2e8f0;border-radius:16px 16px 16px 4px;border:1px solid rgba(255,255,255,.06);}
+.mBub.mUsr{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(124,58,237,.25));color:#e0f2fe;border-radius:16px 16px 4px 16px;border:1px solid rgba(6,182,212,.2);}
+.mBub.mTyp{display:flex;gap:5px;align-items:center;}
+.mBub.mTyp span{width:7px;height:7px;border-radius:50%;background:#6b7280;animation:aibounce 1.2s infinite;}
+.mBub.mTyp span:nth-child(2){animation-delay:.2s;}
+.mBub.mTyp span:nth-child(3){animation-delay:.4s;}
+@keyframes aibounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.aiIn{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:rgba(0,0,0,.2);}
+.aiInp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 14px;font-size:12px;color:#fff;outline:none;transition:border-color .2s;}
+.aiInp::placeholder{color:#4b5563;}
+.aiInp:focus{border-color:rgba(6,182,212,.5);}
+.aiSnd{width:38px;height:38px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#06b6d4,#7c3aed);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aiSnd:active{transform:scale(.92);}
+</style>
+<button id="aiFloatBtn" onclick="aiTgl()" title="AutoBiz AI Help">&#129302;</button>
+<div id="aiChatBox">
+  <div class="aiH">
+    <div class="aiAv">&#129302;</div>
+    <div>
+      <div class="aiT">AutoBiz AI Co-Pilot</div>
+      <div class="aiSt"><div class="aiDt"></div><span class="aiStT">Online &middot; Powered by Gemini</span></div>
+    </div>
+    <button class="aiX" onclick="aiTgl()">&#x2715;</button>
+  </div>
+  <div class="aiQ">
+    <button class="aiQB" onclick="aiQ('Member kaise add karein?')">&#128100; Member</button>
+    <button class="aiQB" onclick="aiQ('Payment kaise record karein?')">&#128176; Payment</button>
+    <button class="aiQB" onclick="aiQ('Branch kaise add karein?')">&#127970; Branch</button>
+    <button class="aiQB" onclick="aiQ('AI Autopilot kya karta hai?')">&#129302; Autopilot</button>
+    <button class="aiQB" onclick="aiQ('Revenue charts kaise dekhein?')">&#128202; Reports</button>
+    <button class="aiQB" onclick="aiQ('Documents kaise upload karein?')">&#128193; Docs</button>
+    <button class="aiQB" onclick="aiQ('Upcoming renewals kaise dekhein?')">&#128276; Renewals</button>
+    <button class="aiQB" onclick="aiQ('Staff kaise add karein?')">&#128119; Staff</button>
+  </div>
+  <div class="aiMsgs" id="aiMsgs">
+    <div class="mRow">
+      <div class="mAv mBot">&#129302;</div>
+      <div class="mBub mBot">Namaste! &#128591; Main <b>AutoBiz AI Co-Pilot</b> hoon.<br><br>Koi bhi feature ke baare mein poochein &#8212; members, payments, branches, analytics, ya kuch bhi!</div>
+    </div>
+  </div>
+  <div class="aiIn">
+    <input class="aiInp" id="aiInp" placeholder="Kuch bhi poochein..." autocomplete="off">
+    <button class="aiSnd" onclick="aiSnd()">&#10148;</button>
+  </div>
+</div>
+<script>
+(function(){
+  var box=document.getElementById('aiChatBox');
+  var msgs=document.getElementById('aiMsgs');
+  var inp=document.getElementById('aiInp');
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiSnd();}});
+  window.aiTgl=function(){
+    box.classList.toggle('aio');
+    if(box.classList.contains('aio'))setTimeout(function(){inp.focus();},80);
+  };
+  window.aiQ=function(q){
+    if(!box.classList.contains('aio'))aiTgl();
+    inp.value=q;aiSnd();
+  };
+  function app(h){msgs.insertAdjacentHTML('beforeend',h);msgs.scrollTop=msgs.scrollHeight;}
+  window.aiSnd=function(){
+    var msg=inp.value.trim();if(!msg)return;inp.value='';
+    app('<div class="mRow mU"><div class="mAv mUsr">&#128100;</div><div class="mBub mUsr">'+msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div></div>');
+    var tid='aid'+Date.now();
+    app('<div class="mRow" id="'+tid+'"><div class="mAv mBot">&#129302;</div><div class="mBub mBot mTyp"><span></span><span></span><span></span></div></div>');
+    var KB=[
+      [['member','add member','naya member','customer add'],'&#128100; <b>Member add karne ke liye:</b><br><br>Dashboard &#10132; Members tab &#10132; <b>"+ Add Member"</b> click karein.<br><br>Name, phone, plan (Monthly/Quarterly/Yearly) aur start/end date fill karein &#10132; Save!'],
+      [['payment','fee','paisa','collection'],'&#128176; <b>Payment record karne ke liye:</b><br><br>Dashboard &#10132; Payments tab &#10132; <b>"+ Add Payment"</b> &#10132; Member select &#10132; Amount &amp; Mode (UPI/Cash/Card) &#10132; Save!'],
+      [['branch','add branch','new branch','location'],'&#127970; <b>New branch add karne ke liye:</b><br><br>Dashboard top mein <b>Branch Switcher</b> dropdown &#10132; <b>"+ Add New Branch"</b> &#10132; Business details fill karein &#10132; Submit!'],
+      [['autopilot','ai autopilot','automation'],'&#129302; <b>AI Autopilot:</b><br><br>Dashboard header mein ON/OFF toggle hai.<br><br>ON hone par automatically:<br>&#8226; WhatsApp renewal reminders<br>&#8226; Lead follow-up messages<br>&#8226; Payment pending alerts<br>&#8226; Daily business digest'],
+      [['report','revenue','analytics','chart','graph'],'&#128202; <b>Analytics &amp; Reports:</b><br><br>Dashboard &#10132; Overview tab &#10132; <b>"Advanced BI Analytics"</b><br><br>6 charts hain: Revenue Trend, Lead Funnel, Customer Retention, Branch Comparison, Footfall, Upcoming Renewals'],
+      [['document','file','upload','records'],'&#128193; <b>Documents:</b><br><br>Members list &#10132; member ke saamne <b>"Docs"</b> button &#10132; Type select &#10132; Title enter &#10132; Upload!<br><br>Secure vault mein store hote hain.'],
+      [['upi','upi id','bank'],'&#128179; <b>UPI ID setup:</b><br><br>Dashboard &#10132; Settings &#10132; UPI ID field (jaise: name@okhdfc)<br><br>100% payment directly aapke bank mein! Zero commission.'],
+      [['lead','trial','inquiry'],'&#127919; <b>Lead add karne ke liye:</b><br><br>Dashboard &#10132; Leads tab &#10132; <b>"+ Add Lead"</b> &#10132; Details fill karein.<br><br>WhatsApp se follow-up ya <b>"Convert"</b> se member bana sakte hain!'],
+      [['attendance','checkin','qr'],'&#128242; <b>QR Attendance:</b><br><br>Dashboard &#10132; QR Code tab &#10132; Unique QR dikhega.<br><br>Member scan karega &#10132; automatic attendance! Footfall chart mein real-time dikhe.'],
+      [['renewal','expire','expiry'],'&#128276; <b>Upcoming Renewals:</b><br><br>Dashboard &#10132; Overview tab &#10132; <b>"Upcoming Renewals (30 Days)"</b><br><br>Expire hone wale members ki list &#8212; Red=urgent, Yellow=soon.'],
+      [['staff','trainer','employee'],'&#128119; <b>Staff add karne ke liye:</b><br><br>Dashboard &#10132; Staff tab &#10132; <b>"+ Add Staff"</b> &#10132; Name, role (Trainer/Receptionist/Manager), phone &#10132; Save!'],
+      [['whatsapp','message','reminder'],'&#128172; <b>WhatsApp:</b><br><br>Leads/Members list mein har row ke saamne green <b>WhatsApp</b> button hai.<br><br>Click &#10132; WhatsApp Web opens with pre-written message!'],
+      [['login','password','forgot'],'&#128273; <b>Login/Password:</b><br><br>Agar password bhool gaye: Login page &#10132; "Forgot Password" &#10132; Phone &#10132; OTP verify &#10132; New password!'],
+    ];
+    var ans=null,ml=msg.toLowerCase();
+    for(var i=0;i<KB.length;i++){var ks=KB[i][0],rp=KB[i][1];for(var j=0;j<ks.length;j++){if(ml.indexOf(ks[j])>=0){ans=rp;break;}}if(ans)break;}
+    var tok=localStorage.getItem('autobiz_token')||localStorage.getItem('autobiz_admin_token')||'';
+    fetch('/ai/chat-assistant',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({message:msg,query:msg,role:'owner'})})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&(d.answer||d.reply))ans=(d.answer||d.reply).replace(/\n/g,'<br>');done();})
+    .catch(function(){done();});
+    function done(){
+      var el=document.getElementById(tid);if(el)el.remove();
+      if(!ans)ans='&#128591; Samajh nahi paya.<br><br>Aap pooch sakte hain:<br>&#8226; Member/Payment/Lead add karna<br>&#8226; Branch management<br>&#8226; AI Autopilot<br>&#8226; Revenue charts &amp; analytics<br>&#8226; Documents &amp; QR Attendance';
+      app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">'+ans+'</div></div>');
+    }
+  };
+})();
+</script>
+
+</body>
+</html>

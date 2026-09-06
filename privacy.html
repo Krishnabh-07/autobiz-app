@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — AutoBiz AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #060813; color: #f3f4f6; overflow-x: hidden; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen p-6 md:p-12">
+    <div class="max-w-4xl mx-auto space-y-8 relative z-10">
+        <header class="flex justify-between items-center pb-6 border-b border-white/10">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
+            </a>
+            <a href="/" class="text-xs font-bold text-gray-400 hover:text-emerald-400 flex items-center gap-1.5 transition">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Home
+            </a>
+        </header>
+
+        <main class="glass-panel p-8 md:p-12 rounded-3xl space-y-6">
+            <h1 class="text-3xl font-extrabold text-white">Privacy Policy</h1>
+            <p class="text-sm text-gray-400">Last updated: August 24, 2026</p>
+
+            <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+                <h2 class="text-lg font-bold text-white mt-6">1. Introduction</h2>
+                <p>AutoBiz AI ("we", "our", "us") values your privacy. This Privacy Policy details how we collect, store, isolate, and protect your information when you register a business, book trials, or purchase memberships through our autopilot SaaS platform.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">2. Information Collection & Data Scope</h2>
+                <p>We collect essential information to deliver automated services:</p>
+                <ul class="list-disc pl-5 space-y-2 text-gray-400">
+                    <li><strong>Business Owner Information:</strong> Name, Email, Phone Number, Password Hash, City, and Business Name.</li>
+                    <li><strong>Customer / Member Information:</strong> Phone Number, Full Name, Email, and Booking Data.</li>
+                    <li><strong>Payment details:</strong> Transaction values, Mode (UPI, Cash), UTR number, and timestamps.</li>
+                </ul>
+
+                <h2 class="text-lg font-bold text-white mt-6">3. Tenant Isolation & Security (P0 Enforcement)</h2>
+                <p>We utilize an enterprise-grade multi-tenant architecture. Every business account is isolated at the API and database levels. A tenant (Business A) cannot access, read, or alter any information belonging to another tenant (Business B) under any circumstances. Autopilot dashboards are protected behind strict JSON Web Token (JWT) verification.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">4. WhatsApp AI Automation & Communications</h2>
+                <p>We send transaction status codes, automated trial reminders, fee alerts, and receipts directly to verified customer WhatsApp numbers. Customers can opt-out at any time by replying with stop commands.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">5. Data Deletion and Portability</h2>
+                <p>Business owners can export members, leads, and transaction data directly from their dashboard panel, or request complete account erasure by contacting our support team at <span class="text-emerald-400">support@autobiz.ai</span>.</p>
+            </div>
+        </main>
+
+        <footer class="text-center text-xs text-gray-500 pt-6">
+            &copy; 2026 AutoBiz AI. All rights reserved.
+        </footer>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

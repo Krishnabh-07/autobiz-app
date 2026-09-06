@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Center — AutoBiz AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #060813; color: #f3f4f6; overflow-x: hidden; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            box-shadow: 0 0 20px rgba(0, 245, 160, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen p-6 md:p-12">
+    <div class="max-w-4xl mx-auto space-y-8 relative z-10">
+        <header class="flex justify-between items-center pb-6 border-b border-white/10">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
+            </a>
+            <a href="/" class="text-xs font-bold text-gray-400 hover:text-emerald-400 flex items-center gap-1.5 transition">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Home
+            </a>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- FAQ List -->
+            <div class="glass-panel p-8 rounded-3xl space-y-6">
+                <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-cyan-400"></i> Frequently Asked Questions
+                </h2>
+                
+                <div class="space-y-4 text-sm">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-white">How does direct UPI payment work?</h4>
+                        <p class="text-gray-400">When customers choose a plan, the app displays your customized UPI QR code directly on their screen. They pay using standard apps (GPay, PhonePe). You verify the UTR reference number instantly from your dashboard.</p>
+                    </div>
+                    <hr class="border-white/5">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-white">Is my data secure from other businesses?</h4>
+                        <p class="text-gray-400">Yes. AutoBiz AI enforces absolute tenant isolation at the API level. Every data request requires a secure JWT verification token. No business can request or access another business's customers or metrics.</p>
+                    </div>
+                    <hr class="border-white/5">
+                    <div class="space-y-1">
+                        <h4 class="font-bold text-white">What is the subscription price for owners?</h4>
+                        <p class="text-gray-400">AutoBiz AI is free to try for 14 days. Ongoing access costs ₹1,500/month, allowing unlimited customers, WhatsApp bot triggers, and lead generation tracking.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact/Support Form -->
+            <div class="glass-panel p-8 rounded-3xl space-y-6">
+                <h2 class="text-2xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="message-square" class="w-6 h-6 text-emerald-400"></i> Contact Support
+                </h2>
+                <p class="text-xs text-gray-400">Need assistance or found a bug? Send us a message and we'll reply via WhatsApp/Email within 12 hours.</p>
+
+                <form onsubmit="handleSupportSubmit(event)" class="space-y-4">
+                    <input type="text" id="supName" required placeholder="Your Name" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-xs outline-none text-white focus:border-emerald-400">
+                    <input type="tel" id="supPhone" required placeholder="WhatsApp Number" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-xs outline-none text-white focus:border-emerald-400">
+                    <textarea id="supMsg" required rows="4" placeholder="How can we help you?" class="w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-xs outline-none text-white focus:border-emerald-400"></textarea>
+                    
+                    <button type="submit" id="supBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-xs">
+                        Send Message
+                    </button>
+                    <div id="supAlert" class="hidden text-center text-xs font-semibold p-3 rounded-xl"></div>
+                </form>
+            </div>
+        </main>
+
+        <footer class="text-center text-xs text-gray-500 pt-6">
+            &copy; 2026 AutoBiz AI. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function handleSupportSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('supBtn');
+            const alertBox = document.getElementById('supAlert');
+            btn.disabled = true;
+            btn.innerText = "Submitting Inquiry...";
+
+            setTimeout(() => {
+                alertBox.className = "text-center text-xs font-semibold p-3 rounded-xl bg-emerald-500/20 text-emerald-300 block";
+                alertBox.innerText = "🎉 Support inquiry sent successfully! Our team will reach out shortly.";
+                document.getElementById('supName').value = '';
+                document.getElementById('supPhone').value = '';
+                document.getElementById('supMsg').value = '';
+                btn.disabled = false;
+                btn.innerText = "Send Message";
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

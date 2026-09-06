@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service — AutoBiz AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #060813; color: #f3f4f6; overflow-x: hidden; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen p-6 md:p-12">
+    <div class="max-w-4xl mx-auto space-y-8 relative z-10">
+        <header class="flex justify-between items-center pb-6 border-b border-white/10">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
+            </a>
+            <a href="/" class="text-xs font-bold text-gray-400 hover:text-emerald-400 flex items-center gap-1.5 transition">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Home
+            </a>
+        </header>
+
+        <main class="glass-panel p-8 md:p-12 rounded-3xl space-y-6">
+            <h1 class="text-3xl font-extrabold text-white">Terms of Service</h1>
+            <p class="text-sm text-gray-400">Last updated: August 24, 2026</p>
+
+            <div class="space-y-4 text-sm text-gray-300 leading-relaxed">
+                <h2 class="text-lg font-bold text-white mt-6">1. Acceptance of Terms</h2>
+                <p>By signing up for or using AutoBiz AI ("the platform"), you agree to abide by these Terms of Service. If you do not agree, you must immediately discontinue use of the platform.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">2. Description of SaaS Platform</h2>
+                <p>AutoBiz AI offers universal business automation CRM features, including lead capture, time-slot scheduling, Direct UPI payment records, and WhatsApp notification hooks. Services are provided on an "as-is" basis.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">3. SaaS Licensing and Payments</h2>
+                <p>Access to the Owner Dashboard is free for a 14-day trial period. To continue using the services, owners must subscribe to the monthly license plan for ₹1,500/month. Subscription payments are direct, non-refundable, and sent via UPI validation.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">4. Direct UPI Payments</h2>
+                <p>AutoBiz AI facilitates direct 0% commission peer-to-peer UPI payments from customers to business owners. We are not a payment gateway, and we hold no funds. All disputes regarding client memberships, visits, or chargebacks must be settled directly between the customer and the respective business owner.</p>
+
+                <h2 class="text-lg font-bold text-white mt-6">5. Abuse and Termination</h2>
+                <p>We reserve the right to suspend or block access to any business account or tenant that engages in fraudulent transactions, WhatsApp spam, or any activity that breaches tenant isolation protocols.</p>
+            </div>
+        </main>
+
+        <footer class="text-center text-xs text-gray-500 pt-6">
+            &copy; 2026 AutoBiz AI. All rights reserved.
+        </footer>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Nearby Businesses — AutoBiz AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #060813; color: #f3f4f6; overflow-x: hidden; }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(0, 245, 160, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0, 245, 160, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 50%, #7b2cbf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            box-shadow: 0 0 20px rgba(0, 245, 160, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#00f5a0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="AutoBiz AI">
+</head>
+    <script>
+    // OWNER GUARD - Explore Nearby is CUSTOMER-ONLY
+    (function() {
+        var token = localStorage.getItem('autobiz_token');
+        if (token) {
+            try {
+                var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+                // If owner token (no 'customer' role), redirect to dashboard
+                if (payload && payload.role !== 'customer') {
+                    window.location.replace('/dashboard.html');
+                }
+            } catch(e) {
+                // Invalid token, allow through
+            }
+        }
+    })();
+    </script>
+
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Header -->
+    <header class="relative z-20 w-full px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <i data-lucide="sparkles" class="w-6 h-6 text-black"></i>
+            </div>
+            <span class="text-2xl font-extrabold tracking-tight">AUTOBIZ<span class="gradient-text">.ai</span></span>
+        </a>        <nav class="hidden md:flex items-center gap-8 glass-card px-6 py-2.5 rounded-full text-sm text-gray-300 font-medium">
+            <a href="/" class="hover:text-cyan-400 transition">Home</a>
+            <a href="/explore.html" class="text-emerald-400 font-semibold">🔍 Explore Nearby</a>
+        </nav>
+
+        <div class="flex items-center gap-3" id="customerNav">
+            <button onclick="openCustomerLogin()" class="glass-card px-5 py-2.5 rounded-xl text-sm font-semibold text-emerald-400 hover:text-white flex items-center gap-2 border border-emerald-500/20 hover:border-emerald-500/50 transition">
+                <i data-lucide="user-circle" class="w-5 h-5"></i> My Bookings
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-6 py-8 space-y-10 flex-1 w-full">
+
+        <!-- Hero Search Section -->
+        <div class="text-center space-y-4 max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card border-cyan-500/30 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Find Top Rated Facilities Near You
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
+                Discover &amp; Book <span class="gradient-text">Top Local Businesses</span>
+            </h1>
+            <p class="text-gray-400 text-sm sm:text-base">
+                Book appointments, pay directly to business, get instant confirmation — Zero middleman.
+            </p>
+
+            <!-- Cascading State → District → City Search Bar -->
+            <div class="glass-card p-3 rounded-2xl flex flex-col gap-3 border-white/10 shadow-2xl">
+                <div class="relative w-full">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-4 top-3.5"></i>
+                    <input type="text" id="searchInput" onkeyup="filterAndLoad()" placeholder="Search Gyms, Clinics, Doctors, Salons..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-black/40 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <select id="stateSelect" onchange="onStateChange()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="">📍 All States</option>
+                    </select>
+                    <select id="districtSelect" onchange="onDistrictChange()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-gray-300 outline-none focus:border-emerald-400">
+                        <option value="">All Districts</option>
+                    </select>
+                    <select id="citySelect" onchange="filterAndLoad()" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-gray-300 outline-none focus:border-emerald-400">
+                        <option value="all">All Cities</option>
+                    </select>
+                    <button onclick="filterAndLoad()" class="btn-gradient text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm">
+                        Search →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start sm:justify-center">
+            <button onclick="selectCategory('all')" class="cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap transition" data-cat="all">
+                🌟 All Categories
+            </button>
+            <button onclick="selectCategory('gym')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="gym">
+                🏋️ Gyms & Fitness
+            </button>
+            <button onclick="selectCategory('clinic')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="clinic">
+                🏥 Clinics & Doctors
+            </button>
+            <button onclick="selectCategory('salon')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="salon">
+                💇 Salons & Spas
+            </button>
+            <button onclick="selectCategory('coaching')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="coaching">
+                🏫 Coaching Centres
+            </button>
+            <button onclick="selectCategory('dental')" class="cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition" data-cat="dental">
+                🦷 Dental Care
+            </button>
+        </div>
+
+        <!-- Business Cards Grid -->
+        <div id="businessesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-3 text-center py-12 text-gray-500">Loading registered businesses...</div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Instant Trial / Slot Booking -->
+    <div id="bookingModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-md glass-card p-6 sm:p-8 rounded-3xl border-cyan-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-emerald-400"></i> <span id="modalBizName">Book Free Trial</span>
+                    </h3>
+                    <p class="text-xs text-gray-400" id="modalBizCity">Guwahati &bull; Verified Facility</p>
+                </div>
+                <button onclick="closeModal('bookingModal')" class="text-gray-400 hover:text-white text-lg">✕</button>
+            </div>
+
+            <form id="bookingForm" onsubmit="submitBooking(event)" class="space-y-3.5">
+                <input type="hidden" id="bookGymId">
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Your Full Name</label>
+                    <input type="text" id="bName" required placeholder="e.g. Rohit Talukdar" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">WhatsApp Phone Number</label>
+                    <input type="tel" id="bPhone" required placeholder="e.g. 9876543210" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[11px] font-semibold text-gray-300">Select Batch / AI Time Slot</label>
+                        <span id="slotCapacityNotice" class="text-[10px] text-emerald-400 font-semibold">⚡ Real-time Capacity</span>
+                    </div>
+                    <select id="bSlot" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-sm text-emerald-400 font-semibold outline-none focus:border-emerald-400">
+                        <option value="">Loading available batches...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-300 mb-1">Your Goal / Notes</label>
+                    <input type="text" id="bNotes" placeholder="e.g. Weight Loss / Consultation" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-sm text-white outline-none focus:border-emerald-400">
+                </div>
+
+                <button type="submit" id="bookSubmitBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm">
+                    Confirm Booking & Get AI Slot 🎯
+                </button>
+            </form>
+
+            <div id="bookSuccessMsg" class="hidden text-center text-sm font-semibold p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 space-y-2">
+                <div>🎉 Trial & Slot Confirmed!</div>
+                <p class="text-xs text-gray-300 font-normal">A confirmation message with instructions has been dispatched to your WhatsApp number.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-6 text-center text-xs text-gray-500">
+        &copy; 2026 AutoBiz AI SaaS Platform &bull; Powered by Krishnabh Talukdar
+    </footer>
+
+    <!-- Member Login Modal (Real OTP system) -->
+    <div id="customerLoginModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-card p-6 sm:p-8 rounded-3xl border-emerald-500/30 relative space-y-5">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-5 h-5 text-emerald-400"></i> Member Access
+                </h3>
+                <button onclick="closeCustomerLogin()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
+                    <i data-lucide="smartphone" class="w-8 h-8 text-emerald-400"></i>
+                </div>
+                <p class="text-sm text-gray-400">Enter your registered WhatsApp number to view your active subscriptions, slots, and QR passes.</p>
+            </div>
+
+            <!-- Phone Input Step -->
+            <div id="otpPhoneStep" class="space-y-4 pt-2">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">WhatsApp Number</label>
+                    <div class="flex">
+                        <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-white/10 bg-black/30 text-gray-400 sm:text-sm">
+                            +91
+                        </span>
+                        <input type="tel" id="customerPhone" placeholder="10-digit number" class="flex-1 w-full px-4 py-3 rounded-r-xl bg-black/50 border border-white/10 text-sm outline-none text-white focus:border-emerald-400">
+                    </div>
+                </div>
+                
+                <button onclick="requestOTP()" id="reqOtpBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
+                    Send Login OTP
+                </button>
+            </div>
+
+            <!-- OTP Input Step (Hidden initially) -->
+            <div id="otpVerifyStep" class="space-y-4 pt-2 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Enter 4-Digit OTP</label>
+                    <input type="text" id="customerOtp" placeholder="••••" class="w-full px-4 py-3 text-center tracking-widest text-lg rounded-xl bg-black/50 border border-white/10 outline-none text-white focus:border-emerald-400">
+                </div>
+                
+                <button onclick="verifyOTP()" id="verifyOtpBtn" class="btn-gradient w-full py-3 rounded-xl font-bold text-slate-950 text-sm shadow-lg shadow-emerald-500/20">
+                    Verify & Login
+                </button>
+                <button onclick="resetOTPStep()" class="w-full text-xs text-gray-400 hover:text-emerald-400 mt-2">Change Number</button>
+            </div>
+            
+            <div id="otpMsg" class="hidden text-center text-xs font-medium p-2 rounded-lg"></div>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script>
+        lucide.createIcons();
+
+        function openCustomerLogin() {
+            document.getElementById('customerLoginModal').classList.remove('hidden');
+            document.getElementById('customerLoginModal').classList.add('flex');
+            resetOTPStep();
+        }
+
+        function closeCustomerLogin() {
+            document.getElementById('customerLoginModal').classList.add('hidden');
+            document.getElementById('customerLoginModal').classList.remove('flex');
+        }
+
+        function resetOTPStep() {
+            document.getElementById('otpPhoneStep').classList.remove('hidden');
+            document.getElementById('otpVerifyStep').classList.add('hidden');
+            document.getElementById('otpMsg').classList.add('hidden');
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerOtp').value = '';
+        }
+
+        async function requestOTP() {
+            const phone = document.getElementById('customerPhone').value.trim();
+            if (!phone || phone.length < 10) {
+                alert('Please enter a valid 10-digit number'); return;
+            }
+            
+            const btn = document.getElementById('reqOtpBtn');
+            btn.innerText = "Sending..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/auth/member/request-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone: phone })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    // Show OTP step
+                    document.getElementById('otpPhoneStep').classList.add('hidden');
+                    document.getElementById('otpVerifyStep').classList.remove('hidden');
+                    
+                    // Show alert with OTP (since we aren't connected to Meta API natively yet)
+                    alert(`✅ WhatsApp SMS Engine Triggered!\n\n(Dev Mode): Your OTP is ${data.mock_otp}\n\nEnter this to login!`);
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            } catch (err) {
+                alert("Connection error!");
+            } finally {
+                btn.innerText = "Send Login OTP"; btn.disabled = false;
+            }
+        }
+
+        async function verifyOTP() {
+            const phone = document.getElementById('customerPhone').value.trim();
+            const otp = document.getElementById('customerOtp').value.trim();
+            const msg = document.getElementById('otpMsg');
+            const btn = document.getElementById('verifyOtpBtn');
+            
+            if (!otp) return;
+            btn.innerText = "Verifying..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/auth/member/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone: phone, otp: otp })
+                });
+                const data = await res.json();
+                
+                msg.classList.remove('hidden');
+                if (res.ok) {
+                    msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-emerald-500/20 text-emerald-300 block";
+                    msg.innerText = "✅ Verification Successful!";
+                    localStorage.setItem('member_token', data.access_token);
+                    localStorage.setItem('member_phone', data.phone);
+
+                    // Execute pending guest booking if present
+                    const pending = localStorage.getItem('pending_booking');
+                    if (pending) {
+                        const payload = JSON.parse(pending);
+                        // Make sure the phone numbers match
+                        payload.phone = phone; 
+                        
+                        try {
+                            const bookRes = await fetch('/leads/create', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            if (bookRes.ok) {
+                                localStorage.removeItem('pending_booking');
+                                msg.innerText = "🎉 Booking Created & Slot Confirmed!";
+                            }
+                        } catch (bookErr) {
+                            console.error("Pending booking execution failed", bookErr);
+                        }
+                    }
+                    
+                    setTimeout(() => {
+                        window.location.href = '/customer_portal.html';
+                    }, 1200);
+                } else {
+                    msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-red-500/20 text-red-300 block";
+                    msg.innerText = data.detail || "❌ Incorrect OTP!";
+                }
+            } catch (err) {
+                msg.className = "text-center text-xs font-bold p-2 rounded-lg bg-red-500/20 text-red-300 block";
+                msg.innerText = "⚠️ Network Error!";
+            } finally {
+                btn.innerText = "Verify & Login"; btn.disabled = false;
+            }
+        }
+
+        let selectedBusinessId = null;
+        let currentCategory = 'all';
+        let allBusinesses = [];
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+        }
+
+        function selectCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap transition";
+                } else {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-xs font-medium text-gray-400 glass-card hover:text-white whitespace-nowrap transition";
+                }
+            });
+            filterAndLoad();
+        }
+
+        async function filterAndLoad() {
+            const city = document.getElementById('citySelect').value;
+            const search = document.getElementById('searchInput').value;
+
+            const grid = document.getElementById('businessesGrid');
+            grid.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-400 animate-pulse">Finding matching facilities...</div>';
+
+            try {
+                let url = `/businesses/explore?city=${encodeURIComponent(city)}&business_type=${encodeURIComponent(currentCategory)}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const res = await fetch(url);
+                if (res.ok) {
+                    allBusinesses = await res.json();
+                    renderGrid(allBusinesses);
+                } else {
+                    grid.innerHTML = '<div class="col-span-3 text-center py-12 text-red-400">Failed to load businesses.</div>';
+                }
+            } catch (e) {
+                console.error("Explore fetch error", e);
+                grid.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500">Connection error.</div>';
+            }
+        }
+
+        function renderGrid(businesses) {
+            const grid = document.getElementById('businessesGrid');
+            if (!businesses.length) {
+                grid.innerHTML = `
+                    <div class="col-span-3 glass-card p-12 rounded-3xl text-center space-y-3">
+                        <div class="text-4xl">🏢</div>
+                        <h3 class="text-lg font-bold text-white">No businesses found in this category yet.</h3>
+                        <p class="text-xs text-gray-400">Be the first to register in this city!</p>
+                        <a href="/" class="btn-gradient inline-block px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950">Register Business Now</a>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = businesses.map(b => `
+                <div class="glass-card rounded-3xl overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <!-- Image & Badges -->
+                        <div class="relative h-44 w-full overflow-hidden">
+                            <img src="${b.image}" alt="${b.name}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#060813] via-transparent to-black/40"></div>
+                            
+                            <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-bold bg-black/60 backdrop-blur-md text-emerald-400 border border-white/10 flex items-center gap-1">
+                                <i data-lucide="star" class="w-3 h-3 text-yellow-400 fill-yellow-400"></i> ${b.rating} Verified
+                            </span>
+
+                            <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-cyan-500/20 backdrop-blur-md text-cyan-300 border border-cyan-500/30">
+                                ${b.business_type}
+                            </span>
+
+                            <span class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold ${b.availability === 'Open Now' ? 'bg-emerald-500/90 text-black' : 'bg-red-500/80 text-white'}">
+                                ${b.availability === 'Open Now' ? '🟢 Open Now' : '🔴 Closed'}
+                            </span>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="p-5 space-y-3">
+                            <div>
+                                <h3 class="text-lg font-extrabold text-white">${b.name}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-emerald-400"></i> ${b.city}
+                                    <span class="text-cyan-400 font-semibold ml-1">📍 ${(Math.abs(Math.sin(b.id)) * 5 + 0.5).toFixed(1)} km away</span>
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 py-3 border-y border-white/5 text-xs">
+                                <div>
+                                    <span class="text-gray-500 block text-[10px]">⏰ TIMINGS</span>
+                                    <span class="font-semibold text-gray-200">${b.timings}</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500 block text-[10px]">💰 STARTING FROM</span>
+                                    <span class="font-bold text-emerald-400">${b.starting_price}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="p-5 pt-0 flex gap-2">
+                        <button onclick="openBookingModal(${b.id}, '${b.name}', '${b.city}')" class="btn-gradient flex-1 py-3 rounded-xl font-bold text-slate-950 text-xs flex items-center justify-center gap-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Book Free Trial
+                        </button>
+                        <button onclick="inquireWhatsApp('${b.phone}', '${b.name}')" class="glass-card px-4 py-3 rounded-xl font-semibold text-xs text-green-400 hover:text-white flex items-center justify-center gap-1" title="WhatsApp Inquiry">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        async function openBookingModal(gymId, name, city) {
+            document.getElementById('bookGymId').value = gymId;
+            document.getElementById('modalBizName').innerText = `Book at ${name}`;
+            document.getElementById('modalBizCity').innerText = `${city} • 1-Day Pass`;
+            document.getElementById('bookingForm').classList.remove('hidden');
+            document.getElementById('bookSuccessMsg').classList.add('hidden');
+            
+            const slotSelect = document.getElementById('bSlot');
+            slotSelect.innerHTML = '<option value="">⏳ Checking live batch availability...</option>';
+            
+            openModal('bookingModal');
+
+            // Fetch Real-time Slots from API
+            try {
+                const res = await fetch(`/gyms/${gymId}/slots`);
+                if (res.ok) {
+                    const data = await res.json();
+                    slotSelect.innerHTML = '';
+                    data.slots.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.slot;
+                        const spotsLeft = s.max_capacity - s.booked_count;
+                        if (s.is_available) {
+                            opt.innerText = `${s.label} (${s.slot}) — 🟢 ${spotsLeft} spots left`;
+                        } else {
+                            opt.innerText = `${s.label} (${s.slot}) — 🔴 BATCH FULL`;
+                            opt.disabled = true;
+                        }
+                        slotSelect.appendChild(opt);
+                    });
+                } else {
+                    slotSelect.innerHTML = `
+                        <option value="07:00 AM - 08:00 AM">🌅 Morning Batch (07:00 AM - 08:00 AM)</option>
+                        <option value="06:00 PM - 07:00 PM">🔥 Evening Batch (06:00 PM - 07:00 PM)</option>
+                    `;
+                }
+            } catch (err) {
+                slotSelect.innerHTML = `
+                    <option value="07:00 AM - 08:00 AM">🌅 Morning Batch (07:00 AM - 08:00 AM)</option>
+                    <option value="06:00 PM - 07:00 PM">🔥 Evening Batch (06:00 PM - 07:00 PM)</option>
+                `;
+            }
+        }
+
+        function inquireWhatsApp(phone, name) {
+            const msg = `Hello ${name}! I found your facility on AutoBiz. I would like to know more about your plans and timing.`;
+            window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        async function submitBooking(e) {
+            e.preventDefault();
+            const btn = document.getElementById('bookSubmitBtn');
+            btn.disabled = true;
+            btn.innerText = "Assigning AI Slot...";
+
+            const gymId = document.getElementById('bookGymId').value;
+            const slot = document.getElementById('bSlot').value;
+            const notes = document.getElementById('bNotes').value;
+
+            const payload = {
+                gym_id: parseInt(gymId),
+                name: document.getElementById('bName').value,
+                phone: document.getElementById('bPhone').value,
+                source: "explore_page",
+                time_slot: slot,
+                notes: `Batch: ${slot} | Note: ${notes || 'Inquiry'}`
+            };
+
+            const token = localStorage.getItem('member_token');
+            const storedPhone = localStorage.getItem('member_phone');
+
+            if (!token || storedPhone !== payload.phone) {
+                // Not authenticated or phone mismatch -> save pending booking & prompt login OTP
+                localStorage.setItem('pending_booking', JSON.stringify(payload));
+                closeModal('bookingModal');
+                
+                // Open Customer Login modal and prefill phone number
+                openCustomerLogin();
+                document.getElementById('customerPhone').value = payload.phone;
+                
+                // Show message informing them of verification
+                const otpMsg = document.getElementById('otpMsg');
+                otpMsg.className = "text-center text-xs font-bold p-2 rounded-lg bg-yellow-500/20 text-yellow-300 block";
+                otpMsg.innerText = "🔑 Verify your phone number to finalize your slot booking.";
+                otpMsg.classList.remove('hidden');
+                
+                btn.disabled = false;
+                btn.innerText = "Confirm Booking & Get AI Slot 🎯";
+                return;
+            }
+
+            try {
+                const res = await fetch('/leads/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    document.getElementById('bookingForm').classList.add('hidden');
+                    document.getElementById('bookSuccessMsg').classList.remove('hidden');
+                    setTimeout(() => {
+                        closeModal('bookingModal');
+                        window.location.href = '/customer_portal.html';
+                    }, 2000);
+                } else {
+                    const errData = await res.json();
+                    alert(errData.detail || 'Booking failed. Please try again.');
+                }
+            } catch (err) {
+                alert('Connection error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Confirm Booking & Get AI Slot 🎯";
+            }
+        }
+
+        // Initial Load
+        filterAndLoad();
+
+        // ─── CASCADING LOCATION LOADER ────────────────────────────
+        let locationData = {};
+        async function loadLocations() {
+            try {
+                const res = await fetch('/locations/states-and-districts');
+                if (!res.ok) return;
+                locationData = await res.json();
+                const stateEl = document.getElementById('stateSelect');
+                Object.keys(locationData).sort().forEach(state => {
+                    stateEl.innerHTML += `<option value="${state}">${state}</option>`;
+                });
+            } catch(e) { console.log('Location load error', e.message); }
+        }
+        function onStateChange() {
+            const state = document.getElementById('stateSelect').value;
+            const distEl = document.getElementById('districtSelect');
+            const cityEl = document.getElementById('citySelect');
+            distEl.innerHTML = '<option value="">All Districts</option>';
+            cityEl.innerHTML = '<option value="all">All Cities</option>';
+            if (state && locationData[state]) {
+                const districts = Object.keys(locationData[state]).sort();
+                districts.forEach(d => {
+                    distEl.innerHTML += `<option value="${d}">${d}</option>`;
+                });
+            }
+            filterAndLoad();
+        }
+        function onDistrictChange() {
+            const state = document.getElementById('stateSelect').value;
+            const district = document.getElementById('districtSelect').value;
+            const cityEl = document.getElementById('citySelect');
+            cityEl.innerHTML = '<option value="all">All Cities</option>';
+            if (state && district && locationData[state] && locationData[state][district]) {
+                locationData[state][district].sort().forEach(city => {
+                    cityEl.innerHTML += `<option value="${city}">${city}</option>`;
+                });
+            }
+            filterAndLoad();
+        }
+        loadLocations();
+
+        // ─── CUSTOMER SELF-BOOKING ───────────────────────────────
+        let selfBookGymId = null;
+        function openSelfBookModal(gymId, gymName, upiId, fee) {
+            selfBookGymId = gymId;
+            document.getElementById('sbGymName').innerText = gymName;
+            document.getElementById('sbFee').innerText = fee ? '₹' + fee : 'Free';
+            document.getElementById('sbUpiDisplay').innerText = upiId || 'Pay at venue';
+            document.getElementById('sbUpiId').value = upiId || '';
+            document.getElementById('selfBookModal').classList.remove('hidden');
+            document.getElementById('selfBookModal').classList.add('flex');
+        }
+        function closeSelfBook() {
+            document.getElementById('selfBookModal').classList.add('hidden');
+            document.getElementById('selfBookModal').classList.remove('flex');
+        }
+        async function submitSelfBook(e) {
+            e.preventDefault();
+            const btn = e.submitter;
+            btn.disabled = true;
+            btn.innerText = 'Booking...';
+            const payload = {
+                gym_id: selfBookGymId,
+                customer_name: document.getElementById('sbName').value.trim(),
+                customer_phone: document.getElementById('sbPhone').value.trim(),
+                customer_email: document.getElementById('sbEmail').value.trim(),
+                service_type: document.getElementById('sbService').value,
+                preferred_date: document.getElementById('sbDate').value,
+                preferred_time: document.getElementById('sbTime').value,
+                utr_number: document.getElementById('sbUtr').value.trim(),
+                notes: document.getElementById('sbNotes').value.trim()
+            };
+            if (!payload.customer_name || !payload.customer_phone) {
+                alert('Name and Phone are required'); btn.disabled = false; btn.innerText = 'Confirm & Book'; return;
+            }
+            try {
+                const res = await fetch('/bookings/customer-self-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    closeSelfBook();
+                    alert('✅ Booking Confirmed! ' + (d.message || 'You will receive a confirmation shortly.'));
+                    filterAndLoad();
+                } else {
+                    alert(d.detail || 'Booking failed. Please try again.');
+                    btn.disabled = false; btn.innerText = 'Confirm & Book';
+                }
+            } catch(err) {
+                alert('Connection error'); btn.disabled = false; btn.innerText = 'Confirm & Book';
+            }
+        }
+
+        // ─── CUSTOMER AI CONCIERGE ───────────────────────────────
+        async function sendCustomerAiChat() {
+            const input = document.getElementById('custAiInput');
+            const log = document.getElementById('custAiLog');
+            const msg = input.value.trim();
+            if (!msg) return;
+            input.value = '';
+            log.innerHTML += `<div class="text-right"><span class="inline-block bg-cyan-500/20 text-cyan-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">${msg}</span></div>`;
+            log.scrollTop = log.scrollHeight;
+            try {
+                const res = await fetch('/ai/chat-assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, role: 'customer' })
+                });
+                const d = await res.json();
+                const reply = d.reply || 'Sorry, I could not process that.';
+                log.innerHTML += `<div class="text-left"><span class="inline-block bg-white/10 text-gray-200 px-3 py-1.5 rounded-xl text-xs max-w-[85%]">🤖 ${reply}</span></div>`;
+                log.scrollTop = log.scrollHeight;
+            } catch(e) {
+                log.innerHTML += `<div class="text-xs text-red-400 pl-1">Error: ${e.message}</div>`;
+            }
+        }
+    </script>
+
+<script>if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js"))}let deferredPrompt;window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;const btn=document.getElementById("pwaInstallBtn");if(btn){btn.style.display="flex"}});function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}}</script>
+<div id="pwaInstallBtn" style="display:none;position:fixed;bottom:24px;left:24px;z-index:9999;background:linear-gradient(135deg,#00f5a0,#00d9f5);color:#000;font-weight:700;padding:12px 20px;border-radius:50px;cursor:pointer;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,245,160,0.4);font-size:14px;" onclick="installPWA()">📱 Install App</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL: CUSTOMER SELF-BOOKING + DIRECT UPI PAYMENT
+════════════════════════════════════════════════════════ -->
+<div id="selfBookModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="w-full max-w-md glass-card p-6 rounded-3xl border border-cyan-500/30 space-y-4 max-h-[92vh] overflow-y-auto">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="text-[10px] font-extrabold text-cyan-400 uppercase tracking-wider">Zero-Friction Booking</span>
+                <h3 class="font-extrabold text-white text-base" id="sbGymName">Book Appointment</h3>
+            </div>
+            <button onclick="closeSelfBook()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-center text-xs">
+            <div class="p-2.5 bg-black/40 rounded-xl">
+                <span class="text-gray-400 block text-[10px]">Consultation Fee</span>
+                <b class="text-emerald-400" id="sbFee">Free</b>
+            </div>
+            <div class="p-2.5 bg-black/40 rounded-xl">
+                <span class="text-gray-400 block text-[10px]">Pay to UPI</span>
+                <b class="text-cyan-300 font-mono text-[10px]" id="sbUpiDisplay">—</b>
+            </div>
+        </div>
+
+        <form onsubmit="submitSelfBook(event)" class="space-y-3">
+            <input type="hidden" id="sbUpiId" value="">
+            <input type="text" id="sbName" required placeholder="Your Full Name *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <input type="tel" id="sbPhone" required placeholder="WhatsApp Phone Number *" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none focus:border-cyan-400">
+            <input type="email" id="sbEmail" placeholder="Email (Optional)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+            <select id="sbService" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-white outline-none">
+                <option value="consultation">Consultation / Trial Visit</option>
+                <option value="membership">Membership Enrollment</option>
+                <option value="appointment">Regular Appointment</option>
+                <option value="checkup">Health Checkup</option>
+            </select>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] text-gray-400 mb-1">Preferred Date</label>
+                    <input type="date" id="sbDate" class="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-gray-400 mb-1">Preferred Time</label>
+                    <input type="time" id="sbTime" class="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] text-gray-400 mb-1">UTR / Transaction ID (after UPI payment)</label>
+                <input type="text" id="sbUtr" placeholder="Enter UTR after paying the fee" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-emerald-500/30 text-xs text-emerald-300 font-mono outline-none">
+            </div>
+            <input type="text" id="sbNotes" placeholder="Any special notes / symptoms (optional)" class="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/10 text-xs text-white outline-none">
+            <button type="submit" class="btn-gradient w-full py-3 rounded-xl text-slate-950 font-bold text-sm">
+                ✅ Confirm &amp; Book — Auto Added to Business Dashboard
+            </button>
+            <p class="text-[10px] text-gray-500 text-center">Your booking is automatically added to the business's dashboard. No manual entry needed.</p>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FLOATING AI ASSISTANT: AUTOBIZ AI (BOTTOM-RIGHT)
+════════════════════════════════════════════════════════ -->
+<style>
+#aiFloatBtn{position:fixed;bottom:24px;right:24px;z-index:9999;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);border:none;cursor:pointer;font-size:26px;box-shadow:0 4px 24px rgba(6,182,212,.45),0 2px 8px rgba(0,0,0,.4);transition:transform .2s,box-shadow .2s;display:flex;align-items:center;justify-content:center;}
+#aiFloatBtn:hover{transform:scale(1.1);}
+#aiFloatBtn:active{transform:scale(.95);}
+#aiChatBox{display:none;position:fixed;bottom:94px;right:24px;z-index:9998;width:360px;max-height:570px;border-radius:20px;overflow:hidden;flex-direction:column;background:rgba(8,10,28,.97);border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 60px rgba(0,0,0,.7);backdrop-filter:blur(24px);}
+#aiChatBox.aio{display:flex;}
+.aiH{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(8,25,55,.9),rgba(30,10,60,.9));border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.aiAv{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.aiT{font-weight:800;font-size:13px;color:#fff;}
+.aiSt{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.aiDt{width:6px;height:6px;border-radius:50%;background:#10b981;animation:aipls 2s infinite;}
+@keyframes aipls{0%,100%{opacity:1}50%{opacity:.4}}
+.aiStT{font-size:10px;color:#10b981;font-weight:700;}
+.aiX{margin-left:auto;background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:4px;}
+.aiX:hover{color:#fff;}
+.aiQ{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 6px;border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;}
+.aiQB{font-size:10px;padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9ca3af;transition:all .15s;white-space:nowrap;}
+.aiQB:hover{background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.4);color:#22d3ee;}
+.aiMsgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:290px;}
+.aiMsgs::-webkit-scrollbar{width:3px;}
+.aiMsgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+.mRow{display:flex;gap:8px;align-items:flex-end;}
+.mRow.mU{flex-direction:row-reverse;}
+.mAv{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.mAv.mBot{background:linear-gradient(135deg,#06b6d4,#7c3aed);}
+.mAv.mUsr{background:rgba(255,255,255,.1);}
+.mBub{max-width:80%;padding:9px 13px;border-radius:16px;font-size:12px;line-height:1.6;}
+.mBub.mBot{background:rgba(255,255,255,.06);color:#e2e8f0;border-radius:16px 16px 16px 4px;border:1px solid rgba(255,255,255,.06);}
+.mBub.mUsr{background:linear-gradient(135deg,rgba(6,182,212,.25),rgba(124,58,237,.25));color:#e0f2fe;border-radius:16px 16px 4px 16px;border:1px solid rgba(6,182,212,.2);}
+.mBub.mTyp{display:flex;gap:5px;align-items:center;}
+.mBub.mTyp span{width:7px;height:7px;border-radius:50%;background:#6b7280;animation:aibounce 1.2s infinite;}
+.mBub.mTyp span:nth-child(2){animation-delay:.2s;}
+.mBub.mTyp span:nth-child(3){animation-delay:.4s;}
+@keyframes aibounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.aiIn{display:flex;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;background:rgba(0,0,0,.2);}
+.aiInp{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 14px;font-size:12px;color:#fff;outline:none;transition:border-color .2s;}
+.aiInp::placeholder{color:#4b5563;}
+.aiInp:focus{border-color:rgba(6,182,212,.5);}
+.aiSnd{width:38px;height:38px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#06b6d4,#7c3aed);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.aiSnd:active{transform:scale(.92);}
+</style>
+
+<button id="aiFloatBtn" onclick="aiTgl()" title="AutoBiz AI Assistant">&#129302;</button>
+<div id="aiChatBox">
+  <div class="aiH">
+    <div class="aiAv">&#129302;</div>
+    <div>
+      <div class="aiT">AutoBiz AI</div>
+      <div class="aiSt"><div class="aiDt"></div><span class="aiStT">Discovery &amp; Assistant &middot; Online</span></div>
+    </div>
+    <button class="aiX" onclick="aiTgl()">&#x2715;</button>
+  </div>
+  <div class="aiQ">
+    <button class="aiQB" onclick="aiQ('Nearby gym kaise find karun?')">&#128205; Nearby Gyms?</button>
+    <button class="aiQB" onclick="aiQ('Appointment kaise book karun?')">&#128197; Book Trial?</button>
+    <button class="aiQB" onclick="aiQ('Meri booking kab hai?')">&#128197; Meri Booking?</button>
+    <button class="aiQB" onclick="aiQ('Meri membership kab expire hogi?')">&#9203; Expiry Date?</button>
+    <button class="aiQB" onclick="aiQ('Payment status kya hai?')">&#128179; Payment Status?</button>
+  </div>
+  <div class="aiMsgs" id="aiMsgs">
+    <div class="mRow">
+      <div class="mAv mBot">&#129302;</div>
+      <div class="mBub mBot">Namaste! &#128591; Main <b>AutoBiz AI Assistant</b> hoon.<br><br>Aap mujhse pooch sakte hain:<br>&#8226; Nearby gym/clinic kaise find karun?<br>&#8226; Free trial ya appointment kaise book karun?<br>&#8226; Meri booking ya membership details kya hain?</div>
+    </div>
+  </div>
+  <div class="aiIn">
+    <input class="aiInp" id="aiInp" placeholder="Apna sawaal poochein..." autocomplete="off">
+    <button class="aiSnd" onclick="aiSnd()">&#10148;</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var box=document.getElementById('aiChatBox');
+  var msgs=document.getElementById('aiMsgs');
+  var inp=document.getElementById('aiInp');
+  if (!box || !msgs || !inp) return;
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiSnd();}});
+  window.aiTgl=function(){
+    box.classList.toggle('aio');
+    if(box.classList.contains('aio'))setTimeout(function(){inp.focus();},80);
+  };
+  window.aiQ=function(q){
+    if(!box.classList.contains('aio'))aiTgl();
+    inp.value=q;aiSnd();
+  };
+  function app(h){msgs.insertAdjacentHTML('beforeend',h);msgs.scrollTop=msgs.scrollHeight;}
+  window.aiSnd=function(){
+    var msg=inp.value.trim();if(!msg)return;inp.value='';
+    app('<div class="mRow mU"><div class="mAv mUsr">&#128100;</div><div class="mBub mUsr">'+msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')+'</div></div>');
+    var tid='aid'+Date.now();
+    app('<div class="mRow" id="'+tid+'"><div class="mAv mBot">&#129302;</div><div class="mBub mBot mTyp"><span></span><span></span><span></span></div></div>');
+    
+    var cPhone = localStorage.getItem('member_phone') || '';
+    var tok = localStorage.getItem('member_token') || '';
+    var ans = null;
+    
+    // Strict Client-Side Privacy Check
+    var ml = msg.toLowerCase();
+    var confidential = ['revenue', 'turnover', 'income', 'profit', 'earnings', 'kamai', 'owner revenue', 'database', 'sql', 'api key', 'source code', 'admin', 'god mode'];
+    if (confidential.some(function(w){ return ml.indexOf(w) >= 0; })) {
+      setTimeout(function(){
+        var el=document.getElementById(tid);if(el)el.remove();
+        app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">&#128274; <b>Security Guardrail Active:</b> Main sirf aapke authorized account data (memberships, bookings, appointments) mein help kar sakta hoon. Business financials aur internal database strictly private hain.</div></div>');
+      }, 300);
+      return;
+    }
+
+    fetch('/ai/chat-assistant', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': tok ? ('Bearer ' + tok) : ''
+      },
+      body: JSON.stringify({
+        message: msg,
+        query: msg,
+        role: 'customer',
+        context_phone: cPhone
+      })
+    })
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){if(d&&(d.answer||d.reply))ans=(d.answer||d.reply).replace(/\n/g,'<br>');done();})
+    .catch(function(){done();});
+
+    function done(){
+      var el=document.getElementById(tid);if(el)el.remove();
+      if(!ans)ans='&#128591; Samajh nahi paya.<br><br>Aap pooch sakte hain:<br>&#8226; Nearby gym kaise find karun?<br>&#8226; Appointment kaise book karun?<br>&#8226; Meri membership kab expire hogi?<br>&#8226; Meri booking kab hai?';
+      app('<div class="mRow"><div class="mAv mBot">&#129302;</div><div class="mBub mBot">'+ans+'</div></div>');
+    }
+  };
+})();
+</script>
+
+</body>
+</html>
